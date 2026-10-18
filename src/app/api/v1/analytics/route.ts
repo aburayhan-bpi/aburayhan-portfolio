@@ -9,6 +9,9 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const period = searchParams.get("period") || "30d";
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+    const limit = Math.max(1, Math.min(200, parseInt(searchParams.get("limit") || "10", 10) || 10));
+    const search = (searchParams.get("search") || "").trim().toLowerCase();
 
     let limitDays = 30;
     if (period === "today") limitDays = 1;
@@ -153,64 +156,119 @@ export async function GET(request: NextRequest) {
       return `${mins}m ${remSec}s`;
     };
 
-    // Sort recent events by timestamp descending and format dates
-    const recentEvents = allRecentEvents
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, 60)
-      .map((evt) => {
-        const d = new Date(evt.timestamp);
-        const formattedDate = d.toLocaleDateString("en-US", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        });
-        const formattedTime = d.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: true,
-        });
+    // Sort all recent events by timestamp descending
+    const sortedEvents = allRecentEvents.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
 
-        let rawCountry = evt.country || "Global";
-        let rawCity = evt.city || "";
+    // Backend Search Filter across all telemetry fields
+    const matchingEvents = search
+      ? sortedEvents.filter((evt) => {
+          const ipMatch = evt.ip?.toLowerCase().includes(search);
+          const pathMatch = evt.path?.toLowerCase().includes(search);
+          const countryMatch = evt.country?.toLowerCase().includes(search);
+          const cityMatch = evt.city?.toLowerCase().includes(search);
+          const osMatch = evt.os?.toLowerCase().includes(search);
+          const browserMatch = evt.browser?.toLowerCase().includes(search);
+          const referrerMatch = evt.referrer?.toLowerCase().includes(search);
+          const modelMatch = (evt as unknown as { deviceModel?: string }).deviceModel
+            ?.toLowerCase()
+            .includes(search);
+          return (
+            ipMatch ||
+            pathMatch ||
+            countryMatch ||
+            cityMatch ||
+            osMatch ||
+            browserMatch ||
+            referrerMatch ||
+            modelMatch
+          );
+        })
+      : sortedEvents;
 
-        // Retroactively resolve local loopback or global records to Bangladesh
-        if (
-          rawCountry === "Global" ||
-          rawCountry === "Localhost (Dev)" ||
-          evt.ip === "127.0.0.1" ||
-          evt.ip === "::1" ||
-          evt.ip === "localhost"
-        ) {
-          rawCountry = "BD";
-          if (!rawCity) rawCity = "Dhaka";
-        }
+    const totalEvents = matchingEvents.length;
+    const totalPages = Math.max(1, Math.ceil(totalEvents / limit));
+    const safePage = Math.min(page, totalPages);
+    const startIndex = (safePage - 1) * limit;
+    const paginatedRawSlice = matchingEvents.slice(startIndex, startIndex + limit);
 
-        const info = resolveCountryInfo(rawCountry);
-        const cleanCountry = formatCountryWithFlag(rawCountry);
-
-        const cleanOs =
-          evt.os && evt.os !== "Unknown OS" && evt.os !== "Other"
-            ? evt.os
-            : "Windows";
-
-        return {
-          ...evt,
-          os: cleanOs,
-          city: rawCity,
-          country: cleanCountry,
-          countryCode: info.code,
-          countryName: info.name,
-          formattedDate,
-          formattedTime,
-          formattedDateTime: `${formattedDate} • ${formattedTime}`,
-          durationFormatted: formatDuration(evt.durationSeconds || 0),
-        };
+    // Format only the paginated slice to save CPU and memory
+    const recentEvents = paginatedRawSlice.map((evt) => {
+      const d = new Date(evt.timestamp);
+      const formattedDate = d.toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
       });
+      const formattedTime = d.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      });
+
+      let rawCountry = evt.country || "Global";
+      let rawCity = evt.city || "";
+
+      // Retroactively resolve local loopback or global records to Bangladesh
+      if (
+        rawCountry === "Global" ||
+        rawCountry === "Localhost (Dev)" ||
+        evt.ip === "127.0.0.1" ||
+        evt.ip === "::1" ||
+        evt.ip === "localhost"
+      ) {
+        rawCountry = "BD";
+        if (!rawCity) rawCity = "Dhaka";
+      }
+
+      const info = resolveCountryInfo(rawCountry);
+      const cleanCountry = formatCountryWithFlag(rawCountry);
+
+      const cleanOs =
+        evt.os && evt.os !== "Unknown OS" && evt.os !== "Other"
+          ? evt.os
+          : "Windows";
+
+      const rawModel = (evt as unknown as { deviceModel?: string }).deviceModel;
+      const cleanDeviceModel =
+        rawModel && rawModel.trim().length > 0
+          ? rawModel
+          : cleanOs === "macOS" || cleanOs === "iOS"
+            ? evt.device === "mobile"
+              ? "Apple iPhone"
+              : "Apple Mac"
+            : evt.device === "desktop"
+              ? "Desktop PC"
+              : "Mobile Device";
+
+      return {
+        ...evt,
+        os: cleanOs,
+        deviceModel: cleanDeviceModel,
+        city: rawCity,
+        country: cleanCountry,
+        countryCode: info.code,
+        countryName: info.name,
+        formattedDate,
+        formattedTime,
+        formattedDateTime: `${formattedDate} • ${formattedTime}`,
+        durationFormatted: formatDuration(evt.durationSeconds || 0),
+      };
+    });
 
     return NextResponse.json({
       success: true,
       period,
+      pagination: {
+        page: safePage,
+        limit,
+        totalEvents,
+        totalPages,
+        hasPrev: safePage > 1,
+        hasNext: safePage < totalPages,
+      },
       summary: {
         totalViews,
         uniqueVisitors,

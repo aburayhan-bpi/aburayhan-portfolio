@@ -6,6 +6,7 @@ export interface IVisitorEvent {
   path: string;
   referrer: string;
   device: "desktop" | "mobile" | "tablet" | "other";
+  deviceModel?: string;
   browser: string;
   os: string;
   country: string;
@@ -40,6 +41,7 @@ const VisitorEventSchema = new Schema<IVisitorEvent>(
     path: { type: String, default: "/" },
     referrer: { type: String, default: "Direct" },
     device: { type: String, default: "desktop" },
+    deviceModel: { type: String, default: "" },
     browser: { type: String, default: "Chrome" },
     os: { type: String, default: "Windows" },
     country: { type: String, default: "Global" },

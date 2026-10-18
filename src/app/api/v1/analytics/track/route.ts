@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       durationSeconds?: number;
       event?: "pageview" | "heartbeat";
       timeZone?: string;
+      deviceModel?: string;
     } = { path: "/", referrer: "Direct" };
 
     try {
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
       durationSeconds = 0,
       event = "pageview",
       timeZone = "",
+      deviceModel = "",
     } = body;
 
     const headersCountry =
@@ -74,6 +76,7 @@ export async function POST(request: NextRequest) {
       city,
       durationSeconds: Number(durationSeconds || 0),
       event,
+      deviceModel,
     });
 
     return NextResponse.json(result, { status: 200 });

@@ -1,4 +1,5 @@
 import connectToDatabase from "@/lib/db";
+import { resolveDeviceModel } from "@/lib/deviceResolver";
 import Analytics from "@/models/Analytics";
 import crypto from "crypto";
 
@@ -83,6 +84,7 @@ export interface TrackVisitorParams {
   city?: string;
   durationSeconds?: number;
   event?: "pageview" | "heartbeat";
+  deviceModel?: string;
 }
 
 /**
@@ -97,6 +99,7 @@ export async function trackVisitorEvent({
   city = "",
   durationSeconds = 0,
   event = "pageview",
+  deviceModel = "",
 }: TrackVisitorParams) {
   try {
     await connectToDatabase();
@@ -104,6 +107,10 @@ export async function trackVisitorEvent({
     const todayStr = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
     const visitorHash = generateVisitorHash(ip, userAgent, todayStr);
     const device = parseDevice(userAgent);
+    const cleanDeviceModel = resolveDeviceModel({
+      userAgent,
+      clientModel: deviceModel,
+    });
     const browser = parseBrowser(userAgent);
     const os = parseOS(userAgent);
     const cleanReferrer = categorizeReferrer(referrer);
@@ -153,6 +160,7 @@ export async function trackVisitorEvent({
             path: cleanPath,
             referrer: cleanReferrer,
             device,
+            deviceModel: cleanDeviceModel,
             browser,
             os,
             country,
@@ -201,13 +209,14 @@ export async function trackVisitorEvent({
     const currentPages = record.pages.get(cleanPath) || 0;
     record.pages.set(cleanPath, currentPages + 1);
 
-    // Append to Recent Events Stream (Cap at 50)
+    // Append to Recent Events Stream (Cap at 100)
     record.recentEvents.unshift({
       timestamp: new Date(),
       ip,
       path: cleanPath,
       referrer: cleanReferrer,
       device,
+      deviceModel: cleanDeviceModel,
       browser,
       os,
       country,
