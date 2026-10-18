@@ -68,6 +68,9 @@ export function Analytics() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [period, setPeriod] = useState<"today" | "7d" | "30d" | "all">("30d");
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [isRefreshing, startRefresh] = useTransition();
 
   // Async promise chain inside effect to satisfy react-hooks/set-state-in-effect
@@ -112,6 +115,28 @@ export function Analytics() {
   const maxTrendViews = Math.max(
     ...(data?.dailyTrend?.map((t) => t.views) || [10]),
     1,
+  );
+
+  const filteredEvents = (data?.recentEvents || []).filter((evt) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      evt.ip?.toLowerCase().includes(q) ||
+      evt.path?.toLowerCase().includes(q) ||
+      evt.country?.toLowerCase().includes(q) ||
+      evt.countryName?.toLowerCase().includes(q) ||
+      (evt.city && evt.city.toLowerCase().includes(q)) ||
+      evt.os?.toLowerCase().includes(q) ||
+      evt.browser?.toLowerCase().includes(q) ||
+      evt.referrer?.toLowerCase().includes(q)
+    );
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredEvents.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedEvents = filteredEvents.slice(
+    startIndex,
+    startIndex + itemsPerPage,
   );
 
   return (
@@ -617,7 +642,7 @@ export function Analytics() {
 
       {/* Real-Time Live Activity Stream */}
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-base font-bold text-foreground">
               Live Telemetry Feed (Date, IP, Location &amp; Time Spent)
@@ -626,122 +651,224 @@ export function Analytics() {
               Comprehensive real-time forensic stream of inbound visits with exact timestamp and dwell time
             </p>
           </div>
-          <span className="text-xs font-mono text-muted-foreground">
-            Displaying last {data?.recentEvents?.length || 0} events
-          </span>
+
+          {/* Search & Per-Page Controls */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Live Search Input */}
+            <div className="relative min-w-[200px] sm:min-w-[260px]">
+              <Icons.Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="Filter IP, Project, Country, OS..."
+                className="w-full bg-secondary/70 border border-border rounded-xl pl-9 pr-8 py-1.5 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setCurrentPage(1);
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  title="Clear filter"
+                >
+                  <Icons.X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            {/* Per-Page Selector */}
+            <div className="flex items-center bg-secondary/70 border border-border rounded-xl p-1 text-xs font-mono">
+              {[10, 25, 50].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => {
+                    setItemsPerPage(n);
+                    setCurrentPage(1);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer font-medium text-[11px] ${
+                    itemsPerPage === n
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {n}/page
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {(!data?.recentEvents || data.recentEvents.length === 0) && !isLoading ? (
           <div className="py-12 text-center text-muted-foreground text-sm font-mono">
             No live events recorded yet. Open aburayhan.dev in your browser to see events stream in.
           </div>
+        ) : filteredEvents.length === 0 ? (
+          <div className="py-12 text-center text-muted-foreground text-xs font-mono">
+            No telemetry records match &quot;{searchQuery}&quot;
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border/80 text-[11px] font-mono uppercase text-muted-foreground">
-                  <th className="py-2.5 px-3">Date &amp; Time</th>
-                  <th className="py-2.5 px-3">Visitor IP</th>
-                  <th className="py-2.5 px-3">Page / Project</th>
-                  <th className="py-2.5 px-3">Time Spent</th>
-                  <th className="py-2.5 px-3">Device &amp; OS</th>
-                  <th className="py-2.5 px-3">Browser</th>
-                  <th className="py-2.5 px-3">Referrer</th>
-                  <th className="py-2.5 px-3 text-right">Location</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40 text-xs font-mono">
-                {data?.recentEvents.map((evt, idx) => (
-                  <tr key={idx} className="hover:bg-secondary/40 transition-colors">
-                    {/* Date & Exact Timestamp */}
-                    <td className="py-2.5 px-3 whitespace-nowrap">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
-                          <Icons.Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
-                          {evt.formattedDate ||
-                            new Date(evt.timestamp).toLocaleDateString("en-US", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                        </span>
-                        <span className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5 font-mono">
-                          <Icons.Clock className="w-3 h-3 text-muted-foreground/70 shrink-0" />
-                          {evt.formattedTime ||
-                            new Date(evt.timestamp).toLocaleTimeString("en-US", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              second: "2-digit",
-                              hour12: true,
-                            })}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* IP Address */}
-                    <td className="py-2.5 px-3 whitespace-nowrap">
-                      <span className="font-bold text-primary font-mono bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
-                        {evt.ip || "127.0.0.1"}
-                      </span>
-                    </td>
-
-                    {/* Page / Project Path */}
-                    <td className="py-2.5 px-3 font-medium text-foreground whitespace-nowrap">
-                      <span
-                        className={`px-2 py-0.5 rounded font-mono text-[11px] ${
-                          evt.path.startsWith("/projects/")
-                            ? "bg-primary/15 text-primary border border-primary/30"
-                            : "bg-secondary text-foreground"
-                        }`}
-                      >
-                        {evt.path}
-                      </span>
-                    </td>
-
-                    {/* Dwell Time / Time Spent */}
-                    <td className="py-2.5 px-3 whitespace-nowrap text-amber-400 font-semibold">
-                      {evt.durationFormatted || (evt.durationSeconds ? `${evt.durationSeconds}s` : "< 5s")}
-                    </td>
-
-                    {/* Device & OS */}
-                    <td className="py-2.5 px-3 capitalize text-muted-foreground whitespace-nowrap">
-                      {evt.device} • {evt.os && evt.os !== "Unknown OS" ? evt.os : "Windows"}
-                    </td>
-
-                    {/* Browser */}
-                    <td className="py-2.5 px-3 text-muted-foreground whitespace-nowrap">
-                      {evt.browser}
-                    </td>
-
-                    {/* Referrer */}
-                    <td className="py-2.5 px-3 text-muted-foreground whitespace-nowrap">
-                      {evt.referrer}
-                    </td>
-
-                    {/* Location */}
-                    <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-secondary text-foreground border border-border">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={`https://flagcdn.com/20x15/${(evt.countryCode || "bd").toLowerCase()}.png`}
-                          alt={evt.countryName || "Flag"}
-                          width={16}
-                          height={12}
-                          className="rounded-[2px] object-cover inline-block shadow-xs shrink-0"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = "none";
-                          }}
-                        />
-                        <span>
-                          {evt.city ? `${evt.city}, ` : ""}
-                          {evt.countryName || evt.country || "Bangladesh"}
-                        </span>
-                      </span>
-                    </td>
+          <div className="space-y-4">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-border/80 text-[11px] font-mono uppercase text-muted-foreground">
+                    <th className="py-2.5 px-3">Date &amp; Time</th>
+                    <th className="py-2.5 px-3">Visitor IP</th>
+                    <th className="py-2.5 px-3">Page / Project</th>
+                    <th className="py-2.5 px-3">Time Spent</th>
+                    <th className="py-2.5 px-3">Device &amp; OS</th>
+                    <th className="py-2.5 px-3">Browser</th>
+                    <th className="py-2.5 px-3">Referrer</th>
+                    <th className="py-2.5 px-3 text-right">Location</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border/40 text-xs font-mono">
+                  {paginatedEvents.map((evt, idx) => (
+                    <tr key={idx} className="hover:bg-secondary/40 transition-colors">
+                      {/* Date & Exact Timestamp */}
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
+                            <Icons.Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
+                            {evt.formattedDate ||
+                              new Date(evt.timestamp).toLocaleDateString("en-US", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5 font-mono">
+                            <Icons.Clock className="w-3 h-3 text-muted-foreground/70 shrink-0" />
+                            {evt.formattedTime ||
+                              new Date(evt.timestamp).toLocaleTimeString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                                hour12: true,
+                              })}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* IP Address */}
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <span className="font-bold text-primary font-mono bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
+                          {evt.ip || "127.0.0.1"}
+                        </span>
+                      </td>
+
+                      {/* Page / Project Path */}
+                      <td className="py-2.5 px-3 font-medium text-foreground whitespace-nowrap">
+                        <span
+                          className={`px-2 py-0.5 rounded font-mono text-[11px] ${
+                            evt.path.startsWith("/projects/")
+                              ? "bg-primary/15 text-primary border border-primary/30"
+                              : "bg-secondary text-foreground"
+                          }`}
+                        >
+                          {evt.path}
+                        </span>
+                      </td>
+
+                      {/* Dwell Time / Time Spent */}
+                      <td className="py-2.5 px-3 whitespace-nowrap text-amber-400 font-semibold">
+                        {evt.durationFormatted || (evt.durationSeconds ? `${evt.durationSeconds}s` : "< 5s")}
+                      </td>
+
+                      {/* Device & OS */}
+                      <td className="py-2.5 px-3 capitalize text-muted-foreground whitespace-nowrap">
+                        {evt.device} • {evt.os && evt.os !== "Unknown OS" ? evt.os : "Windows"}
+                      </td>
+
+                      {/* Browser */}
+                      <td className="py-2.5 px-3 text-muted-foreground whitespace-nowrap">
+                        {evt.browser}
+                      </td>
+
+                      {/* Referrer */}
+                      <td className="py-2.5 px-3 text-muted-foreground whitespace-nowrap">
+                        {evt.referrer}
+                      </td>
+
+                      {/* Location */}
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-secondary text-foreground border border-border">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`https://flagcdn.com/20x15/${(evt.countryCode || "bd").toLowerCase()}.png`}
+                            alt={evt.countryName || "Flag"}
+                            width={16}
+                            height={12}
+                            className="rounded-[2px] object-cover inline-block shadow-xs shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = "none";
+                            }}
+                          />
+                          <span>
+                            {evt.city ? `${evt.city}, ` : ""}
+                            {evt.countryName || evt.country || "Bangladesh"}
+                          </span>
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls Footer */}
+            {filteredEvents.length > 0 && (
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-border/60 text-xs font-mono text-muted-foreground">
+                <div>
+                  Showing{" "}
+                  <span className="font-semibold text-foreground">
+                    {startIndex + 1}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-semibold text-foreground">
+                    {Math.min(startIndex + itemsPerPage, filteredEvents.length)}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-foreground">
+                    {filteredEvents.length}
+                  </span>{" "}
+                  events
+                  {searchQuery && (
+                    <span className="text-primary font-medium"> (filtered)</span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage <= 1}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-secondary text-foreground text-xs font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Icons.ChevronLeft className="w-3.5 h-3.5" />
+                    <span>Previous</span>
+                  </button>
+
+                  <span className="px-2 text-xs">
+                    Page <strong className="text-foreground">{currentPage}</strong> of{" "}
+                    <strong className="text-foreground">{totalPages}</strong>
+                  </span>
+
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage >= totalPages}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-secondary text-foreground text-xs font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <span>Next</span>
+                    <Icons.ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
