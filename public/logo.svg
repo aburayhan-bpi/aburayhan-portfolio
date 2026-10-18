@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" fill="none">
+  <defs>
+    <linearGradient id="logoTextGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+    <linearGradient id="logoIconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+    <linearGradient id="logoBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#121622" />
+      <stop offset="100%" stop-color="#090A0F" />
+    </linearGradient>
+  </defs>
+
+  <!-- Icon Mark (left) -->
+  <g transform="translate(4, 6)">
+    <rect width="48" height="48" rx="14" fill="url(#logoBgGrad)" stroke="#1E2536" stroke-width="1.5"/>
+    <!-- AR Monogram scaled inside 48x48 -->
+    <path d="M 12 36 L 21 13 C 21.8 11.2 23.8 11.2 24.5 13 L 30 27" 
+          stroke="url(#logoIconGrad)" 
+          stroke-width="3.5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+    <path d="M 16 27 H 34" 
+          stroke="url(#logoIconGrad)" 
+          stroke-width="3" 
+          stroke-linecap="round"/>
+    <path d="M 24.5 12.5 H 34 C 38 12.5 40 15 39 19 C 38 23 35 24.5 30 25" 
+          stroke="#F1F5F9" 
+          stroke-width="3.2" 
+          stroke-linecap="round"/>
+    <path d="M 30 25 L 38 36" 
+          stroke="url(#logoIconGrad)" 
+          stroke-width="3.5" 
+          stroke-linecap="round"/>
+    <!-- Live Dot -->
+    <circle cx="39" cy="11" r="2" fill="#10B981" />
+  </g>
+
+  <!-- Typography (right) -->
+  <g transform="translate(62, 0)">
+    <!-- Name -->
+    <text x="0" y="30" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="18" fill="#F1F5F9" letter-spacing="-0.3">
+      Abu <tspan fill="url(#logoTextGrad)">Rayhan</tspan>
+    </text>
+    <!-- Tagline/Title -->
+    <text x="0" y="46" font-family="'JetBrains Mono', 'Geist Mono', monospace" font-weight="500" font-size="9.5" fill="#94A3B8" letter-spacing="1.2">
+      FULL-STACK ENGINEER
+    </text>
+  </g>
+</svg>
