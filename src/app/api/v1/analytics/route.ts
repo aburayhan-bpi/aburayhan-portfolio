@@ -1,4 +1,4 @@
-import { formatCountryWithFlag } from "@/lib/geoResolver";
+import { formatCountryWithFlag, resolveCountryInfo } from "@/lib/geoResolver";
 import connectToDatabase from "@/lib/db";
 import Analytics from "@/models/Analytics";
 import { NextRequest, NextResponse } from "next/server";
@@ -174,15 +174,19 @@ export async function GET(request: NextRequest) {
         let rawCountry = evt.country || "Global";
         let rawCity = evt.city || "";
 
-        // Retroactively resolve local loopback testing to Bangladesh
+        // Retroactively resolve local loopback or global records to Bangladesh
         if (
-          (rawCountry === "Global" || rawCountry === "Localhost (Dev)") &&
-          (evt.ip === "127.0.0.1" || evt.ip === "::1" || evt.ip === "localhost")
+          rawCountry === "Global" ||
+          rawCountry === "Localhost (Dev)" ||
+          evt.ip === "127.0.0.1" ||
+          evt.ip === "::1" ||
+          evt.ip === "localhost"
         ) {
           rawCountry = "BD";
           if (!rawCity) rawCity = "Dhaka";
         }
 
+        const info = resolveCountryInfo(rawCountry);
         const cleanCountry = formatCountryWithFlag(rawCountry);
 
         const cleanOs =
@@ -195,6 +199,8 @@ export async function GET(request: NextRequest) {
           os: cleanOs,
           city: rawCity,
           country: cleanCountry,
+          countryCode: info.code,
+          countryName: info.name,
           formattedDate,
           formattedTime,
           formattedDateTime: `${formattedDate} • ${formattedTime}`,

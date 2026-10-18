@@ -15,31 +15,55 @@ export function getFlagEmoji(countryCode: string): string {
   return String.fromCodePoint(...codePoints);
 }
 
-export function formatCountryWithFlag(rawCountry: string): string {
-  if (!rawCountry || rawCountry === "Global") return "Global";
-  if (rawCountry === "Localhost (Dev)") return "Bangladesh 🇧🇩 (Local Dev)";
+export function resolveCountryInfo(rawCountry: string): {
+  code: string;
+  name: string;
+} {
+  if (!rawCountry || rawCountry === "Global" || rawCountry === "Localhost (Dev)") {
+    return { code: "BD", name: "Bangladesh" };
+  }
 
-  // If already formatted with an emoji flag, return as-is
-  if (/\p{Extended_Pictographic}/u.test(rawCountry)) return rawCountry;
+  // Strip emoji if present
+  const cleanStr = rawCountry.replace(/\p{Extended_Pictographic}/gu, "").trim();
 
-  const trimmed = rawCountry.trim().toUpperCase();
-
-  // If 2-letter ISO country code (e.g., BD, US, DE, JP, AE, CA, etc.)
-  if (/^[A-Z]{2}$/.test(trimmed)) {
+  // If 2-letter ISO code
+  if (/^[A-Za-z]{2}$/.test(cleanStr)) {
+    const code = cleanStr.toUpperCase();
     try {
       if (!regionDisplayNames && typeof Intl !== "undefined" && Intl.DisplayNames) {
         regionDisplayNames = new Intl.DisplayNames(["en"], { type: "region" });
       }
-      const fullName = regionDisplayNames ? regionDisplayNames.of(trimmed) : trimmed;
-      const flag = getFlagEmoji(trimmed);
-      return `${fullName || trimmed} ${flag}`.trim();
+      const fullName = regionDisplayNames?.of(code) || code;
+      return { code, name: fullName };
     } catch {
-      const flag = getFlagEmoji(trimmed);
-      return `${trimmed} ${flag}`.trim();
+      return { code, name: code };
     }
   }
 
-  return rawCountry;
+  // Check known country names to map back to 2-letter code for flags
+  const lower = cleanStr.toLowerCase();
+  if (lower.includes("bangladesh")) return { code: "BD", name: "Bangladesh" };
+  if (lower.includes("united states") || lower === "usa" || lower === "us") return { code: "US", name: "United States" };
+  if (lower.includes("united arab") || lower === "uae") return { code: "AE", name: "United Arab Emirates" };
+  if (lower.includes("india")) return { code: "IN", name: "India" };
+  if (lower.includes("united kingdom") || lower === "uk") return { code: "GB", name: "United Kingdom" };
+  if (lower.includes("germany")) return { code: "DE", name: "Germany" };
+  if (lower.includes("canada")) return { code: "CA", name: "Canada" };
+  if (lower.includes("australia")) return { code: "AU", name: "Australia" };
+
+  return { code: "BD", name: cleanStr };
+}
+
+export function formatCountryWithFlag(rawCountry: string): string {
+  if (!rawCountry || rawCountry === "Global") return "Bangladesh 🇧🇩";
+  if (rawCountry === "Localhost (Dev)") return "Bangladesh 🇧🇩";
+
+  // If already formatted with an emoji flag, return as-is
+  if (/\p{Extended_Pictographic}/u.test(rawCountry)) return rawCountry;
+
+  const info = resolveCountryInfo(rawCountry);
+  const flag = getFlagEmoji(info.code);
+  return `${info.name} ${flag}`.trim();
 }
 
 // Fallback dictionary for backwards compatibility
@@ -103,7 +127,7 @@ export function resolveGeoLocation({
     if (timeZone.includes("/")) {
       const parts = timeZone.split("/");
       const cityGuess = parts[1]?.replace(/_/g, " ") || "";
-      return { country: parts[0] || "Global", city: cityGuess };
+      return { country: parts[0] || "BD", city: cityGuess };
     }
   }
 
@@ -119,5 +143,5 @@ export function resolveGeoLocation({
     return { country: "BD", city: "Dhaka (Local Dev)" };
   }
 
-  return { country: "Global", city: "" };
+  return { country: "BD", city: "Dhaka" };
 }

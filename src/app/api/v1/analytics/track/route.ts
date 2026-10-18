@@ -32,9 +32,15 @@ export async function POST(request: NextRequest) {
     } = { path: "/", referrer: "Direct" };
 
     try {
-      body = await request.json();
+      const text = await request.text();
+      if (text && text.trim().length > 0) {
+        body = JSON.parse(text);
+      }
     } catch {
-      // Beacon sent as text or empty payload
+      // Fallback in case stream was already read
+      try {
+        body = await request.json();
+      } catch {}
     }
 
     const {

@@ -144,18 +144,19 @@ export const ProjectsSection = () => {
         referrer: `Project Action: ${action}`,
         timeZone,
       });
-      if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
-        navigator.sendBeacon(
-          "/api/v1/analytics/track",
-          new Blob([payload], { type: "application/json" }),
-        );
-      } else {
+
+      if (typeof fetch !== "undefined") {
         fetch("/api/v1/analytics/track", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: payload,
           keepalive: true,
         }).catch(() => {});
+      } else if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+        navigator.sendBeacon(
+          "/api/v1/analytics/track",
+          new Blob([payload], { type: "application/json" }),
+        );
       }
     } catch {}
   };

@@ -41,6 +41,8 @@ interface VisitorEventItem {
   browser: string;
   os: string;
   country: string;
+  countryCode?: string;
+  countryName?: string;
   city: string;
   durationSeconds: number;
   durationFormatted: string;
@@ -718,9 +720,22 @@ export function Analytics() {
 
                     {/* Location */}
                     <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                      <span className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-secondary text-foreground border border-border">
-                        {evt.city ? `${evt.city}, ` : ""}
-                        {evt.country || "Bangladesh 🇧🇩"}
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-secondary text-foreground border border-border">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`https://flagcdn.com/20x15/${(evt.countryCode || "bd").toLowerCase()}.png`}
+                          alt={evt.countryName || "Flag"}
+                          width={16}
+                          height={12}
+                          className="rounded-[2px] object-cover inline-block shadow-xs shrink-0"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                          }}
+                        />
+                        <span>
+                          {evt.city ? `${evt.city}, ` : ""}
+                          {evt.countryName || evt.country || "Bangladesh"}
+                        </span>
                       </span>
                     </td>
                   </tr>

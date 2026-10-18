@@ -4,22 +4,27 @@ import type React from "react";
 
 import { Header } from "@/components/dashboard/header";
 import { Sidebar } from "@/components/dashboard/sidebar";
-import { useState } from "react";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  //   const { user, isLoading } = useAuth();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const user = true;
+  useEffect(() => {
+    const token = Cookies.get("accessToken");
+    const role = Cookies.get("userRole");
 
-  if (!user) {
-    return null;
-  }
+    if (!token || role !== "ADMIN") {
+      router.replace("/login");
+    }
+  }, [router]);
 
   return (
     <div className="flex h-screen bg-background">

@@ -56,6 +56,7 @@ const authSlice = createSlice({
       Cookies.remove("authUser");
       Cookies.remove("accessToken");
       Cookies.remove("refreshToken");
+      Cookies.remove("userRole");
     },
 
     clearAuthError: () => {},
