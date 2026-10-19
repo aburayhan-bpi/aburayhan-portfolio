@@ -58,8 +58,8 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-background text-foreground">
       {/* Brand Hero Panel (Desktop) */}
       <AuthSidePanel
-        heading="Secure account recovery for portfolio "
-        subheading="Reset your account password quickly to regain access to your saved listings, visit requests, and rental agreements."
+        heading="Secure Account Recovery"
+        subheading="Reset your account password quickly to regain access to your engineering workspace."
       />
 
       {/* Right Column: Clean, Compact Form */}
@@ -73,12 +73,12 @@ export default function ForgotPasswordPage() {
               aria-label="portfolio  Home"
             >
               <Image
-                src="/portfolio-.png"
-                alt="portfolio "
-                width={150}
-                height={38}
+                src="/logo.svg"
+                alt="Md Abu Rayhan"
+                width={130}
+                height={32}
                 priority
-                className="h-8 w-auto object-contain mx-auto"
+                className="h-7 w-auto object-contain mx-auto"
               />
             </Link>
           </div>
@@ -201,7 +201,7 @@ export default function ForgotPasswordPage() {
           {/* Security note */}
           <div className="pt-2 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
             <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-            <span>End-to-end secured • Zero broker charges</span>
+            <span>End-to-end encrypted session</span>
           </div>
         </div>
       </div>

@@ -30,6 +30,10 @@ export async function POST(request: NextRequest) {
       event?: "pageview" | "heartbeat";
       timeZone?: string;
       deviceModel?: string;
+      gpuRenderer?: string;
+      screenWidth?: number;
+      screenHeight?: number;
+      devicePixelRatio?: number;
     } = { path: "/", referrer: "Direct" };
 
     try {
@@ -51,6 +55,10 @@ export async function POST(request: NextRequest) {
       event = "pageview",
       timeZone = "",
       deviceModel = "",
+      gpuRenderer = "",
+      screenWidth = 0,
+      screenHeight = 0,
+      devicePixelRatio = 1,
     } = body;
 
     const headersCountry =
@@ -67,6 +75,14 @@ export async function POST(request: NextRequest) {
       timeZone,
     });
 
+    const headerModel =
+      request.headers.get("sec-ch-ua-model")?.replace(/^["']|["']$/g, "").trim() || "";
+
+    const effectiveModel =
+      deviceModel && deviceModel !== "K" && deviceModel !== "Unknown Device" && deviceModel !== "Mobile Device"
+        ? deviceModel
+        : headerModel;
+
     const result = await trackVisitorEvent({
       ip,
       userAgent,
@@ -76,7 +92,11 @@ export async function POST(request: NextRequest) {
       city,
       durationSeconds: Number(durationSeconds || 0),
       event,
-      deviceModel,
+      deviceModel: effectiveModel,
+      gpuRenderer,
+      screenWidth: Number(screenWidth || 0),
+      screenHeight: Number(screenHeight || 0),
+      devicePixelRatio: Number(devicePixelRatio || 1),
     });
 
     return NextResponse.json(result, { status: 200 });

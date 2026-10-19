@@ -5,11 +5,11 @@ import { setUser, setTokens } from "@/redux/features/user/authSlice";
 import { useAppDispatch } from "@/redux/hook";
 import { IAllStatusEnum, IRole } from "@/types/global";
 import Cookies from "js-cookie";
-import { Lock, Mail, ShieldAlert, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -23,23 +23,32 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const redirectTarget = searchParams.get("redirect") || "/dashboard/admin";
+
+  // Check if session already exists, redirect immediately
+  useEffect(() => {
+    const token = Cookies.get("accessToken");
+    const role = Cookies.get("userRole");
+    if (token && token.trim().length > 0) {
+      router.replace(role === "ADMIN" ? redirectTarget : "/");
+    }
+  }, [redirectTarget, router]);
 
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "aburayhan.bpi@gmail.com",
+      email: "",
       password: "",
     },
   });
@@ -76,22 +85,16 @@ export default function LoginPage() {
         dispatch(setTokens({ accessToken: resData.token }));
         Cookies.set("userRole", "ADMIN");
 
-        toast.success("Welcome back, Rayhan! Admin session active.");
+        toast.success("Welcome back!");
         router.replace(redirectTarget);
       } else {
-        toast.error(resData.error || "Authentication failed. Check your password.");
+        toast.error(resData.error || "Invalid credentials. Please verify your email and password.");
       }
     } catch {
-      toast.error("Network error during authorization.");
+      toast.error("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickFill = () => {
-    setValue("email", "aburayhan.bpi@gmail.com");
-    setValue("password", "Rayhan#Admin@2026!");
-    toast.info("Master credentials populated for quick review");
   };
 
   return (
@@ -120,52 +123,33 @@ export default function LoginPage() {
         </div>
 
         {/* Center Card */}
-        <div className="w-full max-w-[420px] mx-auto my-12 space-y-6">
+        <div className="w-full max-w-[400px] mx-auto my-12 space-y-6">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[11px] font-mono text-primary">
-              <Sparkles className="w-3 h-3 text-accent" />
-              <span>Restricted System Gateway</span>
-            </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-              Admin Authorization
+              Sign In
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground">
-              Sign in to manage projects, edit case studies, and view telemetry leads.
+              Enter your credentials to continue to your workspace.
             </p>
           </div>
 
-          {/* Quick Credential Helper Pill */}
-          <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-secondary/50 border border-border text-xs">
-            <span className="text-[11px] font-mono text-muted-foreground flex items-center gap-1.5">
-              <ShieldAlert className="w-3.5 h-3.5 text-accent" />
-              <span>Admin: aburayhan.bpi@gmail.com</span>
-            </span>
-            <button
-              type="button"
-              onClick={handleQuickFill}
-              className="px-2.5 py-1 text-[10px] font-mono font-medium bg-card hover:bg-secondary text-primary border border-border rounded-lg transition-colors cursor-pointer"
-            >
-              Fill Credentials
-            </button>
-          </div>
-
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} autoComplete="off" className="space-y-4">
             {/* Email Field */}
             <div className="space-y-1.5">
               <label
                 htmlFor="email"
                 className="text-xs font-mono text-muted-foreground block"
               >
-                Admin Email
+                Email address
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <Input
                   id="email"
                   type="email"
-                  autoComplete="email"
-                  placeholder="aburayhan.bpi@gmail.com"
+                  autoComplete="off"
+                  placeholder="name@example.com"
                   {...register("email")}
                   className={`w-full h-10 pl-10 pr-3 text-xs rounded-xl border bg-card text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary ${
                     errors.email ? "border-destructive" : "border-border"
@@ -179,26 +163,38 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Password Field */}
+            {/* Password Field with Show/Hide Toggle */}
             <div className="space-y-1.5">
               <label
                 htmlFor="password"
                 className="text-xs font-mono text-muted-foreground block"
               >
-                Master Password
+                Password
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <Input
                   id="password"
-                  type="password"
-                  autoComplete="current-password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
                   placeholder="••••••••••••"
                   {...register("password")}
-                  className={`w-full h-10 pl-10 pr-3 text-xs rounded-xl border bg-card text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary ${
+                  className={`w-full h-10 pl-10 pr-10 text-xs rounded-xl border bg-card text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary ${
                     errors.password ? "border-destructive" : "border-border"
                   }`}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
               </div>
               {errors.password && (
                 <p className="text-[11px] text-destructive font-mono">
@@ -216,10 +212,10 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  <span>Verifying Session...</span>
+                  <span>Signing in...</span>
                 </>
               ) : (
-                <span>Authenticate &amp; Enter Console</span>
+                <span>Sign In</span>
               )}
             </button>
           </form>
@@ -227,12 +223,26 @@ export default function LoginPage() {
 
         {/* Footer Notice */}
         <div className="text-center text-[11px] font-mono text-muted-foreground">
-          <span>Protected by AES-256 JWT Encryption • Md Abu Rayhan</span>
+          <span>&copy; {new Date().getFullYear()} Md Abu Rayhan. All rights reserved.</span>
         </div>
       </div>
 
       {/* Right Column: Branded Side Panel */}
       <AuthSidePanel />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

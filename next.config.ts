@@ -9,26 +9,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "gofl-stream.s3.amazonaws.com",
-      },
-      {
-        protocol: "https",
-        hostname: "gofl.pro",
-      },
-      {
-        protocol: "https",
-        hostname: "gofl-stream.s3.us-east-1.amazonaws.com",
-      },
-      {
-        protocol: "https",
-        hostname: "gofl-stream-dev.s3.us-east-1.amazonaws.com",
-      },
-      {
-        protocol: "https",
-        hostname: "gofl-stream-dev.s3.amazonaws.com",
-      },
-      {
-        protocol: "https",
         hostname: "images.unsplash.com",
       },
       {
@@ -55,6 +35,25 @@ const nextConfig: NextConfig = {
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
+  },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Accept-CH",
+            value:
+              "Sec-CH-UA-Model, Sec-CH-UA-Platform, Sec-CH-UA-Platform-Version, Sec-CH-UA-Mobile, Sec-CH-UA-Arch",
+          },
+          {
+            key: "Permissions-Policy",
+            value:
+              "ch-ua-model=(self), ch-ua-platform=(self), ch-ua-platform-version=(self), ch-ua-mobile=(self), ch-ua-arch=(self)",
+          },
+        ],
+      },
+    ];
   },
 };
 

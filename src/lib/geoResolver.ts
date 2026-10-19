@@ -92,9 +92,14 @@ export function resolveGeoLocation({
     headersCountry !== "Localhost (Dev)" &&
     headersCountry.trim() !== ""
   ) {
+    let cleanCity = (headersCity && headersCity.trim()) || "";
+    try {
+      cleanCity = decodeURIComponent(cleanCity);
+    } catch {}
+
     return {
       country: headersCountry.trim().toUpperCase(),
-      city: (headersCity && headersCity.trim()) || "",
+      city: cleanCity,
     };
   }
 

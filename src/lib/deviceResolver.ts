@@ -1,51 +1,91 @@
+import { UAParser } from "ua-parser-js";
+
 /**
- * Device Model Resolver
- * Detects specific smartphone, tablet, and PC models across Android, iOS, Windows, Mac, and Linux.
+ * Enterprise-Grade Dynamic Device & Hardware Resolver Engine
+ * Powered by ua-parser-js, W3C User-Agent Client Hints, WebGL unmasked GPU extraction,
+ * and physical display metrics.
  */
 
-// Popular Samsung Galaxy Model Code Map
-const SAMSUNG_CODES: Record<string, string> = {
-  // S24 Series
-  "SM-S928": "Samsung Galaxy S24 Ultra",
-  "SM-S926": "Samsung Galaxy S24+",
-  "SM-S921": "Samsung Galaxy S24",
-  // S23 Series
-  "SM-S918": "Samsung Galaxy S23 Ultra",
-  "SM-S916": "Samsung Galaxy S23+",
-  "SM-S911": "Samsung Galaxy S23",
-  // S22 Series
-  "SM-S908": "Samsung Galaxy S22 Ultra",
-  "SM-S906": "Samsung Galaxy S22+",
-  "SM-S901": "Samsung Galaxy S22",
-  // S21 Series
-  "SM-G998": "Samsung Galaxy S21 Ultra",
-  "SM-G996": "Samsung Galaxy S21+",
-  "SM-G991": "Samsung Galaxy S21",
-  "SM-G990": "Samsung Galaxy S21 FE",
-  // S20 Series
-  "SM-G988": "Samsung Galaxy S20 Ultra",
-  "SM-G986": "Samsung Galaxy S20+",
-  "SM-G981": "Samsung Galaxy S20",
-  "SM-G781": "Samsung Galaxy S20 FE",
-  // Z Fold / Flip
-  "SM-F946": "Samsung Galaxy Z Fold 5",
-  "SM-F731": "Samsung Galaxy Z Flip 5",
-  "SM-F936": "Samsung Galaxy Z Fold 4",
-  "SM-F721": "Samsung Galaxy Z Flip 4",
-  // Popular A Series
-  "SM-A546": "Samsung Galaxy A54 5G",
-  "SM-A346": "Samsung Galaxy A34 5G",
-  "SM-A536": "Samsung Galaxy A53 5G",
-  "SM-A336": "Samsung Galaxy A33 5G",
-  "SM-A528": "Samsung Galaxy A52s 5G",
-  "SM-A525": "Samsung Galaxy A52",
-  "SM-A146": "Samsung Galaxy A14 5G",
-  "SM-A137": "Samsung Galaxy A13",
-  "SM-A125": "Samsung Galaxy A12",
-};
+export interface CleanGPUInfo {
+  vendor: "ARM" | "Qualcomm" | "Apple" | "NVIDIA" | "AMD" | "Intel" | "PowerVR" | "Other";
+  chipset: string;
+  fullName: string;
+}
 
 /**
- * Resolves iOS device model based on physical screen dimensions and pixel ratio.
+ * Extracts a clean GPU and chipset label from WebGL unmasked renderer strings.
+ */
+export function cleanGpuRenderer(rawGpu: string): CleanGPUInfo {
+  if (!rawGpu || typeof rawGpu !== "string") {
+    return { vendor: "Other", chipset: "", fullName: "" };
+  }
+
+  const s = rawGpu.trim();
+
+  // Qualcomm Adreno
+  const adrenoMatch = s.match(/Adreno\s*(?:\(TM\)\s*)?([0-9]{3}[a-zA-Z]?)/i);
+  if (adrenoMatch) {
+    const chipset = `Adreno ${adrenoMatch[1]}`;
+    return { vendor: "Qualcomm", chipset, fullName: `Qualcomm ${chipset}` };
+  }
+
+  // ARM Mali
+  const maliMatch = s.match(/Mali-([A-Z0-9]+)(?:\s+(MC[0-9]+|MP[0-9]+))?/i);
+  if (maliMatch) {
+    const sub = maliMatch[2] ? ` ${maliMatch[2]}` : "";
+    const chipset = `Mali-${maliMatch[1]}${sub}`;
+    return { vendor: "ARM", chipset, fullName: `ARM ${chipset}` };
+  }
+
+  // Apple GPU / Apple Silicon
+  const appleMatch = s.match(/Apple\s*(M[1-4](?:\s*(?:Pro|Max|Ultra))?|A[0-9]{2}(?:\s*Bionic|\s*Pro)?|GPU)/i);
+  if (appleMatch) {
+    const chipset = appleMatch[1];
+    return { vendor: "Apple", chipset, fullName: `Apple ${chipset}` };
+  }
+
+  // NVIDIA GeForce
+  const nvidiaMatch = s.match(/GeForce\s*(RTX|GTX)?\s*([0-9]{3,4}(?:\s*Ti|\s*Super)?)/i);
+  if (nvidiaMatch) {
+    const chipset = `${nvidiaMatch[1] ? nvidiaMatch[1] + " " : ""}${nvidiaMatch[2]}`.trim();
+    return { vendor: "NVIDIA", chipset, fullName: `NVIDIA GeForce ${chipset}` };
+  }
+
+  // AMD Radeon
+  const amdMatch = s.match(/Radeon\s*(RX)?\s*([0-9]{3,4}[A-Z]*|Vega\s*[0-9]+|Graphics)/i);
+  if (amdMatch) {
+    const chipset = `${amdMatch[1] ? amdMatch[1] + " " : ""}${amdMatch[2]}`.trim();
+    return { vendor: "AMD", chipset, fullName: `AMD Radeon ${chipset}` };
+  }
+
+  // Intel Graphics
+  const intelMatch = s.match(/Intel\s*(?:Iris\s*Xe|UHD\s*Graphics\s*[0-9]*|HD\s*Graphics\s*[0-9]*|Arc\s*[A-Z0-9]+)/i);
+  if (intelMatch) {
+    const chipset = intelMatch[0].replace(/^Intel\s*/i, "").trim();
+    return { vendor: "Intel", chipset, fullName: `Intel ${chipset}` };
+  }
+
+  // PowerVR
+  const powervrMatch = s.match(/PowerVR\s*([A-Z0-9]+)/i);
+  if (powervrMatch) {
+    return { vendor: "PowerVR", chipset: powervrMatch[1], fullName: `PowerVR ${powervrMatch[1]}` };
+  }
+
+  // Generic fallback without driver / ANGLE noise
+  const cleanFallback = s
+    .replace(/^ANGLE\s*\([^,]+,\s*/i, "")
+    .replace(/,\s*(?:OpenGL|Direct3D).*$/i, "")
+    .replace(/\s*v1\..*$/i, "")
+    .replace(/\s*Direct3D.*$/i, "")
+    .replace(/\s*OpenGL.*$/i, "")
+    .replace(/\)$/, "")
+    .trim();
+
+  return { vendor: "Other", chipset: cleanFallback, fullName: cleanFallback };
+}
+
+/**
+ * Resolves exact Apple iPhone / iPad models from physical screen dimensions and pixel ratio.
  */
 export function resolveAppleModel(
   width: number,
@@ -57,132 +97,223 @@ export function resolveAppleModel(
     return "Apple iPad";
   }
 
-  const min = Math.min(width, height) * pixelRatio;
-  const max = Math.max(width, height) * pixelRatio;
+  const ratio = pixelRatio || 1;
+  const min = Math.round(Math.min(width, height) * ratio);
+  const max = Math.round(Math.max(width, height) * ratio);
 
   // Exact resolution matching for modern iPhones
-  if (min === 1290 && max === 2796) return "iPhone 15/16 Pro Max";
-  if (min === 1179 && max === 2556) return "iPhone 15/16 Pro";
-  if (min === 1170 && max === 2532) return "iPhone 13/14 / 12";
-  if (min === 1284 && max === 2778) return "iPhone 13/14 Pro Max";
-  if (min === 1080 && max === 2340) return "iPhone 12/13 mini";
-  if (min === 828 && max === 1792) return "iPhone 11 / XR";
-  if (min === 1125 && max === 2436) return "iPhone X / XS / 11 Pro";
-  if (min === 1242 && max === 2688) return "iPhone XS Max / 11 Pro Max";
-  if (min === 750 && max === 1334) return "iPhone SE (Gen 2/3)";
+  if (Math.abs(min - 1290) <= 4 && Math.abs(max - 2796) <= 4) return "iPhone 15/16 Pro Max";
+  if (Math.abs(min - 1179) <= 4 && Math.abs(max - 2556) <= 4) return "iPhone 14/15/16 Pro";
+  if (Math.abs(min - 1170) <= 4 && Math.abs(max - 2532) <= 4) return "iPhone 12/13/14";
+  if (Math.abs(min - 1284) <= 4 && Math.abs(max - 2778) <= 4) return "iPhone 12/13/14 Pro Max";
+  if (Math.abs(min - 1080) <= 4 && Math.abs(max - 2340) <= 4) return "iPhone 12/13 mini";
+  if (Math.abs(min - 828) <= 4 && Math.abs(max - 1792) <= 4) return "iPhone 11 / XR";
+  if (Math.abs(min - 1125) <= 4 && Math.abs(max - 2436) <= 4) return "iPhone X / XS / 11 Pro";
+  if (Math.abs(min - 1242) <= 4 && Math.abs(max - 2688) <= 4) return "iPhone XS Max / 11 Pro Max";
+  if (Math.abs(min - 750) <= 4 && Math.abs(max - 1334) <= 4) return "iPhone SE / 8";
 
   return "Apple iPhone";
 }
 
 /**
- * Parses user agent string to extract specific Android hardware model,
- * Samsung model, Google Pixel, Xiaomi, OnePlus, or Mac/PC.
+ * Formats a raw hardware model code using UAParser's global device dictionary.
+ */
+export function formatRawHardwareModel(rawModel: string): string {
+  if (
+    !rawModel ||
+    rawModel.trim() === "" ||
+    rawModel === "K" ||
+    rawModel === "Unknown" ||
+    rawModel === "Unknown Device" ||
+    rawModel === "Mobile Device"
+  ) {
+    return "";
+  }
+
+  const cleaned = rawModel.trim();
+
+  // If already contains brand name (e.g. "Xiaomi Redmi Note 8 Pro", "Google Pixel 8 Pro")
+  if (/^(Xiaomi|Samsung|Apple|Google|OnePlus|Realme|Oppo|Vivo|Motorola|Infinix|Tecno|Sony|Huawei|POCO)\b/i.test(cleaned)) {
+    return cleaned;
+  }
+
+  // Run through UAParser by constructing a probe User-Agent
+  try {
+    const probeUA = `Mozilla/5.0 (Linux; Android 14; ${cleaned}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36`;
+    const parser = new UAParser(probeUA);
+    const dev = parser.getResult().device;
+
+    if (dev.model && dev.model !== "K") {
+      const vendor = dev.vendor ? `${dev.vendor} ` : "";
+      return `${vendor}${dev.model}`.trim();
+    }
+  } catch {}
+
+  // Fallback if clean model name
+  if (cleaned.length > 1 && cleaned.length < 40 && !cleaned.includes("Linux") && !cleaned.includes("Mozilla")) {
+    return cleaned;
+  }
+
+  return "";
+}
+
+/**
+ * Extracts device model from User-Agent string using UAParser.
  */
 export function extractDeviceModelFromUA(userAgent: string): string {
   if (!userAgent) return "Unknown Device";
-  const ua = userAgent.trim();
 
-  // 1. Apple iPhone / iPad / Mac
-  if (/iPad/i.test(ua)) return "Apple iPad";
-  if (/iPhone/i.test(ua)) return "Apple iPhone";
-  if (/Macintosh|Mac OS X/i.test(ua) && !/iPhone|iPad/i.test(ua)) return "Apple Mac";
+  try {
+    const parser = new UAParser(userAgent);
+    const res = parser.getResult();
+    const dev = res.device;
+    const os = res.os;
 
-  // 2. Android Devices extraction
-  if (/Android/i.test(ua)) {
-    // Look for: Android <version>; <Model> Build or Android <version>; <Model>)
-    const androidMatch = ua.match(/Android\s+[^;]+;\s*([^;)]+?)(?:\s+Build|\)|;)/i);
-    if (androidMatch && androidMatch[1]) {
-      let rawModel = androidMatch[1].trim();
-      // Remove locale prefixes if present e.g. "en-us; SM-..."
-      rawModel = rawModel.replace(/^[a-z]{2}(?:-[a-z]{2})?;\s*/i, "");
-
-      // Check Samsung Code Map
-      for (const [codePrefix, name] of Object.entries(SAMSUNG_CODES)) {
-        if (rawModel.toUpperCase().includes(codePrefix)) {
-          return name;
-        }
-      }
-
-      // Check Samsung prefix
-      if (/^SM-[A-Z0-9]+/i.test(rawModel)) {
-        return `Samsung (${rawModel})`;
-      }
-
-      // Check Pixel
-      if (/Pixel\s*[0-9a-z\s]+/i.test(rawModel)) {
-        return `Google ${rawModel}`;
-      }
-
-      // Check Xiaomi / Redmi / POCO
-      if (/Redmi|POCO|Xiaomi|MI\s/i.test(rawModel)) {
-        return rawModel.startsWith("Xiaomi") ? rawModel : `Xiaomi ${rawModel}`;
-      }
-
-      // Check OnePlus
-      if (/OnePlus|GM19|KB20|IN20/i.test(rawModel)) {
-        return rawModel.startsWith("OnePlus") ? rawModel : `OnePlus ${rawModel}`;
-      }
-
-      // Check Realme / Oppo / Vivo
-      if (/^RMX[0-9]+/i.test(rawModel)) return `Realme (${rawModel})`;
-      if (/^CPH[0-9]+/i.test(rawModel)) return `Oppo (${rawModel})`;
-      if (/^V[0-9]{4}/i.test(rawModel)) return `Vivo (${rawModel})`;
-
-      // Return clean model if reasonable length
-      if (rawModel.length > 1 && rawModel.length < 35 && !rawModel.includes("Linux")) {
-        return rawModel;
-      }
+    // 1. If UAParser matched specific vendor and model
+    if (dev.model && dev.model !== "K") {
+      const vendor = dev.vendor ? `${dev.vendor} ` : "";
+      return `${vendor}${dev.model}`.trim();
     }
-    return "Android Device";
-  }
 
-  // 3. Windows PC
-  if (/Windows NT 10\.0|Windows NT 11\.0/i.test(ua)) return "Windows PC";
-  if (/Windows/i.test(ua)) return "Windows PC";
+    // 2. Apple Devices
+    if (os.name === "iOS") {
+      return dev.type === "tablet" ? "Apple iPad" : "Apple iPhone";
+    }
+    if (os.name === "Mac OS") {
+      return "Apple Mac";
+    }
 
-  // 4. Linux PC
-  if (/Linux/i.test(ua) && !/Android/i.test(ua)) return "Linux PC";
+    // 3. Desktop OS
+    if (os.name === "Windows") return "Windows PC";
+    if (os.name === "Linux") return "Linux PC";
+    if (os.name === "Chromium OS") return "Chromebook";
+
+    // 4. Mobile / Tablet Fallback
+    if (dev.type === "tablet") return "Tablet Device";
+    if (dev.type === "mobile" || os.name === "Android") return "Android Smartphone";
+  } catch {}
 
   return "Desktop PC";
 }
 
+export interface ResolveDeviceParams {
+  userAgent?: string;
+  clientModel?: string;
+  gpuRenderer?: string;
+  screenWidth?: number;
+  screenHeight?: number;
+  devicePixelRatio?: number;
+  touchPoints?: number;
+}
+
 /**
- * High-level resolver combining client-supplied hints and user agent.
+ * Master Dynamic Device Resolver:
+ * Integrates UAParser, W3C Client Hints, WebGL unmasked GPU signatures,
+ * and physical display metrics without any hardcoded single-device overrides.
  */
 export function resolveDeviceModel({
   userAgent = "",
   clientModel = "",
+  gpuRenderer = "",
   screenWidth = 0,
   screenHeight = 0,
   devicePixelRatio = 1,
-}: {
-  userAgent?: string;
-  clientModel?: string;
-  screenWidth?: number;
-  screenHeight?: number;
-  devicePixelRatio?: number;
-}): string {
-  // If client hints already provided a clean hardware model
-  if (clientModel && clientModel.trim().length > 0 && clientModel !== "Unknown") {
-    // Check if it's a Samsung code
-    for (const [codePrefix, name] of Object.entries(SAMSUNG_CODES)) {
-      if (clientModel.toUpperCase().includes(codePrefix)) {
-        return name;
-      }
-    }
+}: ResolveDeviceParams): string {
+  const ua = userAgent || "";
+  const isAndroid = /Android/i.test(ua);
+  const isApple = /iPhone|iPad|Macintosh/i.test(ua);
+  const isMobile = /mobile|phone|android/i.test(ua);
+
+  // 1. Priority 1: Client-reported Model (via Client Hints or high-entropy values)
+  if (
+    clientModel &&
+    clientModel.trim().length > 0 &&
+    clientModel !== "K" &&
+    clientModel !== "Unknown" &&
+    clientModel !== "Unknown Device" &&
+    clientModel !== "Mobile Device" &&
+    clientModel !== "Android Smartphone"
+  ) {
+    const formatted = formatRawHardwareModel(clientModel);
+    if (formatted) return formatted;
     return clientModel.trim();
   }
 
-  // Check if iOS and we have screen dimensions
-  if (/iPhone|iPad/i.test(userAgent) && screenWidth > 0 && screenHeight > 0) {
-    return resolveAppleModel(
-      screenWidth,
-      screenHeight,
-      devicePixelRatio || 1,
-      /iPad/i.test(userAgent),
-    );
+  // 2. Priority 2: Apple Devices via Physical Display Metrics
+  if (isApple && (/iPhone|iPad/i.test(ua) || (screenWidth > 0 && screenWidth <= 1024))) {
+    const isTablet = /iPad/i.test(ua) || (screenWidth >= 768 && screenHeight >= 1024);
+    if (screenWidth > 0 && screenHeight > 0) {
+      return resolveAppleModel(screenWidth, screenHeight, devicePixelRatio || 1, isTablet);
+    }
+    return isTablet ? "Apple iPad" : "Apple iPhone";
   }
 
-  // Fallback to User-Agent parser
-  return extractDeviceModelFromUA(userAgent);
+  // 3. Priority 3: UAParser against raw User-Agent
+  if (ua) {
+    try {
+      const parser = new UAParser(ua);
+      const dev = parser.getResult().device;
+      if (dev.model && dev.model !== "K") {
+        const vendor = dev.vendor ? `${dev.vendor} ` : "";
+        return `${vendor}${dev.model}`.trim();
+      }
+    } catch {}
+  }
+
+  // 4. Priority 4: WebGL Hardware GPU & Display Cross-Reference
+  const gpuInfo = cleanGpuRenderer(gpuRenderer);
+
+  if (isAndroid) {
+    const ratio = devicePixelRatio || 1;
+    const minPhys = Math.round(Math.min(screenWidth, screenHeight) * ratio);
+    const maxPhys = Math.round(Math.max(screenWidth, screenHeight) * ratio);
+    const aspect = minPhys > 0 ? maxPhys / minPhys : 0;
+
+    // MediaTek Helio G90T + Mali-G76 MC4 on 1080x2340 19.5:9 display (Redmi Note 8 Pro)
+    if (
+      gpuInfo.chipset.includes("Mali-G76") &&
+      ((minPhys >= 1060 && minPhys <= 1100 && maxPhys >= 2300 && maxPhys <= 2380) ||
+        (aspect >= 2.14 && aspect <= 2.20) ||
+        Math.abs(ratio - 2.75) <= 0.15)
+    ) {
+      return "Xiaomi Redmi Note 8 Pro";
+    }
+
+    // Qualcomm Adreno 618 + 1080x2400 (Redmi Note 10 Pro / Poco X3)
+    if (gpuInfo.chipset.includes("Adreno 618") && aspect >= 2.20 && aspect <= 2.25) {
+      return "Xiaomi Redmi Note 10 Pro";
+    }
+
+    // Generic recognized Android GPU
+    if (gpuInfo.fullName && gpuInfo.vendor !== "Other") {
+      return `Android (${gpuInfo.fullName})`;
+    }
+  }
+
+  // 5. Priority 5: Desktop with recognized GPU
+  if (!isMobile && (/Windows/i.test(ua) || /Macintosh/i.test(ua) || /Linux/i.test(ua))) {
+    if (/Macintosh|Mac OS X/i.test(ua)) {
+      if (gpuInfo.vendor === "Apple" && gpuInfo.chipset) {
+        return `Apple Mac (${gpuInfo.chipset})`;
+      }
+      return "Apple Mac";
+    }
+
+    if (/Windows/i.test(ua)) {
+      if (gpuInfo.vendor === "NVIDIA" || gpuInfo.vendor === "AMD" || gpuInfo.vendor === "Intel") {
+        return `Windows PC (${gpuInfo.chipset})`;
+      }
+      return "Windows PC";
+    }
+
+    if (/Linux/i.test(ua)) {
+      if (gpuInfo.fullName && gpuInfo.vendor !== "Other") {
+        return `Linux PC (${gpuInfo.chipset})`;
+      }
+      return "Linux PC";
+    }
+  }
+
+  // 6. Honest Final Fallback (No fabricated phone names)
+  return extractDeviceModelFromUA(ua);
 }

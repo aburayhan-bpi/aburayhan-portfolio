@@ -1,4 +1,5 @@
 import { formatCountryWithFlag, resolveCountryInfo } from "@/lib/geoResolver";
+import { formatRawHardwareModel } from "@/lib/deviceResolver";
 import connectToDatabase from "@/lib/db";
 import Analytics from "@/models/Analytics";
 import { NextRequest, NextResponse } from "next/server";
@@ -171,9 +172,9 @@ export async function GET(request: NextRequest) {
           const osMatch = evt.os?.toLowerCase().includes(search);
           const browserMatch = evt.browser?.toLowerCase().includes(search);
           const referrerMatch = evt.referrer?.toLowerCase().includes(search);
-          const modelMatch = (evt as unknown as { deviceModel?: string }).deviceModel
-            ?.toLowerCase()
-            .includes(search);
+          const rawM = (evt as unknown as { deviceModel?: string }).deviceModel || "";
+          const resolvedM = formatRawHardwareModel(rawM) || rawM;
+          const modelMatch = resolvedM.toLowerCase().includes(search);
           return (
             ipMatch ||
             pathMatch ||
@@ -210,6 +211,9 @@ export async function GET(request: NextRequest) {
 
       let rawCountry = evt.country || "Global";
       let rawCity = evt.city || "";
+      try {
+        rawCity = decodeURIComponent(rawCity);
+      } catch {}
 
       // Retroactively resolve local loopback or global records to Bangladesh
       if (
@@ -231,17 +235,33 @@ export async function GET(request: NextRequest) {
           ? evt.os
           : "Windows";
 
-      const rawModel = (evt as unknown as { deviceModel?: string }).deviceModel;
-      const cleanDeviceModel =
-        rawModel && rawModel.trim().length > 0
-          ? rawModel
-          : cleanOs === "macOS" || cleanOs === "iOS"
-            ? evt.device === "mobile"
-              ? "Apple iPhone"
-              : "Apple Mac"
-            : evt.device === "desktop"
-              ? "Desktop PC"
-              : "Mobile Device";
+      const rawModel = (evt as unknown as { deviceModel?: string }).deviceModel || "";
+      let cleanDeviceModel = "";
+      if (
+        rawModel &&
+        rawModel.trim().length > 0 &&
+        rawModel !== "K" &&
+        rawModel !== "Mobile Device" &&
+        rawModel !== "Unknown Device"
+      ) {
+        cleanDeviceModel = formatRawHardwareModel(rawModel) || rawModel;
+      }
+
+      if (
+        !cleanDeviceModel ||
+        cleanDeviceModel === "Mobile Device" ||
+        cleanDeviceModel === "Unknown Device"
+      ) {
+        if (cleanOs === "macOS" || cleanOs === "iOS") {
+          cleanDeviceModel = evt.device === "mobile" ? "Apple iPhone" : "Apple Mac";
+        } else if (evt.device === "desktop") {
+          cleanDeviceModel = "Desktop PC";
+        } else if (evt.device === "tablet") {
+          cleanDeviceModel = "Tablet Device";
+        } else {
+          cleanDeviceModel = "Android Smartphone";
+        }
+      }
 
       return {
         ...evt,

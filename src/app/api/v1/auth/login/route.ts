@@ -52,22 +52,17 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = await request.json();
 
-    const adminEmail = process.env.ADMIN_EMAIL || "aburayhan.bpi@gmail.com";
+    const normalizedEmail = (email || "").toLowerCase().trim();
+    const adminEmail = (process.env.ADMIN_EMAIL || "aburayhan.bpi@gmail.com").toLowerCase().trim();
     const initialEnvPassword = process.env.ADMIN_INITIAL_PASSWORD || "Rayhan#Admin@2026!";
 
-    if (email.toLowerCase().trim() !== adminEmail.toLowerCase().trim()) {
-      return NextResponse.json(
-        { success: false, error: "Invalid email or master credentials" },
-        { status: 401 },
-      );
-    }
-
     let isMatch = false;
+    let loggedInUser = null;
 
     try {
       await connectToDatabase();
       const adminInDb = await AdminUser.findOne({
-        email: adminEmail.toLowerCase().trim(),
+        email: normalizedEmail,
       });
 
       if (adminInDb?.passwordHash) {
@@ -76,16 +71,17 @@ export async function POST(request: NextRequest) {
         if (isMatch) {
           adminInDb.lastLogin = new Date();
           await adminInDb.save();
+          loggedInUser = adminInDb;
         }
-      } else {
+      } else if (normalizedEmail === adminEmail) {
         // Initial setup before any password was changed or DB record created
         isMatch = password === initialEnvPassword;
         if (isMatch) {
           // Auto-seed admin user in database with hashed password
           const salt = await bcrypt.genSalt(10);
           const hash = await bcrypt.hash(initialEnvPassword, salt);
-          await AdminUser.create({
-            email: adminEmail.toLowerCase().trim(),
+          loggedInUser = await AdminUser.create({
+            email: adminEmail,
             passwordHash: hash,
             name: "Md Abu Rayhan",
             role: "ADMIN",
@@ -97,25 +93,25 @@ export async function POST(request: NextRequest) {
     } catch (dbErr) {
       console.error("Database connection error during login:", dbErr);
       return NextResponse.json(
-        { success: false, error: "Database authentication unavailable" },
+        { success: false, error: "Authentication service temporarily unavailable" },
         { status: 500 },
       );
     }
 
     if (!isMatch) {
       return NextResponse.json(
-        { success: false, error: "Invalid email or master password" },
+        { success: false, error: "Invalid email or password" },
         { status: 401 },
       );
     }
 
     const adminProfile = {
-      id: "admin-abu-rayhan",
-      email: adminEmail,
+      id: loggedInUser?._id?.toString() || "admin-abu-rayhan",
+      email: loggedInUser?.email || normalizedEmail,
       firstName: "Abu",
       lastName: "Rayhan",
-      role: "ADMIN",
-      avatar: "/logo.svg",
+      role: loggedInUser?.role || "ADMIN",
+      avatar: loggedInUser?.avatar || "/logo.svg",
       phone: "+880 1789-322199",
       location: "Sherpur, Bogura, Bangladesh",
     };

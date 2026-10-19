@@ -1,57 +1,102 @@
 "use client";
 
+import { resolveDeviceModel } from "@/lib/deviceResolver";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-function getClientDeviceModel(): string {
+function getWebGLRenderer(): string {
   if (typeof window === "undefined") return "";
+  try {
+    const canvas = document.createElement("canvas");
+    const gl =
+      canvas.getContext("webgl2") ||
+      canvas.getContext("webgl") ||
+      canvas.getContext("experimental-webgl");
+    if (!gl) return "";
+
+    const webgl = gl as WebGLRenderingContext;
+    const ext = webgl.getExtension("WEBGL_debug_renderer_info");
+    if (ext) {
+      // 0x9246 = UNMASKED_RENDERER_WEBGL
+      const unmasked = webgl.getParameter(ext.UNMASKED_RENDERER_WEBGL || 0x9246);
+      if (typeof unmasked === "string" && unmasked.trim()) {
+        return unmasked.trim();
+      }
+    }
+
+    // 0x1F01 is the standard WebGL RENDERER constant
+    const standard = webgl.getParameter(webgl.RENDERER || 0x1f01);
+    if (typeof standard === "string" && standard.trim()) {
+      return standard.trim();
+    }
+  } catch {}
+  return "";
+}
+
+async function detectDeviceModelAsync(): Promise<{
+  deviceModel: string;
+  gpuRenderer: string;
+  screenWidth: number;
+  screenHeight: number;
+  devicePixelRatio: number;
+}> {
+  if (typeof window === "undefined") {
+    return {
+      deviceModel: "",
+      gpuRenderer: "",
+      screenWidth: 0,
+      screenHeight: 0,
+      devicePixelRatio: 1,
+    };
+  }
 
   const ua = navigator.userAgent || "";
-  const width = window.screen.width;
-  const height = window.screen.height;
-  const ratio = window.devicePixelRatio || 1;
+  const screenWidth = window.screen.width || 0;
+  const screenHeight = window.screen.height || 0;
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  const gpuRenderer = getWebGLRenderer();
 
-  // iOS Resolution Detection
-  if (/iPhone/i.test(ua)) {
-    const min = Math.min(width, height) * ratio;
-    const max = Math.max(width, height) * ratio;
+  let clientModel = "";
 
-    if (min === 1290 && max === 2796) return "iPhone 15/16 Pro Max";
-    if (min === 1179 && max === 2556) return "iPhone 15/16 Pro";
-    if (min === 1170 && max === 2532) return "iPhone 13/14 / 12";
-    if (min === 1284 && max === 2778) return "iPhone 13/14 Pro Max";
-    if (min === 1080 && max === 2340) return "iPhone 12/13 mini";
-    if (min === 828 && max === 1792) return "iPhone 11 / XR";
-    if (min === 1125 && max === 2436) return "iPhone X / XS / 11 Pro";
-    if (min === 1242 && max === 2688) return "iPhone XS Max / 11 Pro Max";
-    if (min === 750 && max === 1334) return "iPhone SE (Gen 2/3)";
-    return "Apple iPhone";
-  }
-
-  if (/iPad/i.test(ua)) {
-    return "Apple iPad";
-  }
-
-  // Android Model from UA
-  if (/Android/i.test(ua)) {
-    const androidMatch = ua.match(/Android\s+[^;]+;\s*([^;)]+?)(?:\s+Build|\)|;)/i);
-    if (androidMatch && androidMatch[1]) {
-      return androidMatch[1].trim();
+  // 1. High-Entropy User-Agent Client Hints (when running in HTTPS / supported browsers)
+  try {
+    const navAny = navigator as unknown as {
+      userAgentData?: {
+        getHighEntropyValues?: (hints: string[]) => Promise<{ model?: string; platform?: string }>;
+      };
+    };
+    if (navAny.userAgentData && typeof navAny.userAgentData.getHighEntropyValues === "function") {
+      const hints = await navAny.userAgentData.getHighEntropyValues(["model", "platform"]);
+      if (hints?.model && hints.model.trim() && hints.model !== "K" && hints.model !== "Unknown") {
+        clientModel = hints.model.trim();
+      }
     }
-    return "Android Device";
-  }
+  } catch {}
 
-  if (/Macintosh|Mac OS X/i.test(ua)) return "Apple Mac";
-  if (/Windows/i.test(ua)) return "Windows PC";
-  if (/Linux/i.test(ua)) return "Linux PC";
+  // 2. High-precision hardware fingerprint resolution
+  const resolved = resolveDeviceModel({
+    userAgent: ua,
+    clientModel,
+    gpuRenderer,
+    screenWidth,
+    screenHeight,
+    devicePixelRatio,
+  });
 
-  return "";
+  return {
+    deviceModel: resolved,
+    gpuRenderer,
+    screenWidth,
+    screenHeight,
+    devicePixelRatio,
+  };
 }
 
 export function AnalyticsBeacon() {
   const pathname = usePathname();
   const lastTracked = useRef<string | null>(null);
   const startTimeRef = useRef<number>(0);
+  const detectedModelRef = useRef<string>("");
 
   useEffect(() => {
     // Avoid tracking admin dashboard routes
@@ -65,28 +110,35 @@ export function AnalyticsBeacon() {
         ? Intl.DateTimeFormat().resolvedOptions().timeZone
         : "";
 
-    const deviceModel = getClientDeviceModel();
+    // Asynchronously detect hardware model and dispatch beacon
+    detectDeviceModelAsync().then((telemetry) => {
+      detectedModelRef.current = telemetry.deviceModel;
 
-    const initialPayload = JSON.stringify({
-      path: pathname,
-      referrer: typeof document !== "undefined" ? document.referrer || "Direct" : "Direct",
-      timeZone,
-      deviceModel,
-      event: "pageview",
+      const initialPayload = JSON.stringify({
+        path: pathname,
+        referrer: typeof document !== "undefined" ? document.referrer || "Direct" : "Direct",
+        timeZone,
+        deviceModel: telemetry.deviceModel,
+        gpuRenderer: telemetry.gpuRenderer,
+        screenWidth: telemetry.screenWidth,
+        screenHeight: telemetry.screenHeight,
+        devicePixelRatio: telemetry.devicePixelRatio,
+        event: "pageview",
+      });
+
+      // 1. Initial Pageview Beacon
+      if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+        const blob = new Blob([initialPayload], { type: "application/json" });
+        navigator.sendBeacon("/api/v1/analytics/track", blob);
+      } else {
+        fetch("/api/v1/analytics/track", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: initialPayload,
+          keepalive: true,
+        }).catch(() => {});
+      }
     });
-
-    // 1. Initial Pageview Beacon
-    if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
-      const blob = new Blob([initialPayload], { type: "application/json" });
-      navigator.sendBeacon("/api/v1/analytics/track", blob);
-    } else {
-      fetch("/api/v1/analytics/track", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: initialPayload,
-        keepalive: true,
-      }).catch(() => {});
-    }
 
     // 2. Helper to dispatch session dwell time
     const sendDwellTime = () => {
@@ -98,6 +150,7 @@ export function AnalyticsBeacon() {
       const heartbeatPayload = JSON.stringify({
         path: pathname,
         durationSeconds,
+        deviceModel: detectedModelRef.current,
         event: "heartbeat",
       });
 

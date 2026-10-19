@@ -2,6 +2,7 @@ import connectToDatabase from "@/lib/db";
 import { resolveDeviceModel } from "@/lib/deviceResolver";
 import Analytics from "@/models/Analytics";
 import crypto from "crypto";
+import { UAParser } from "ua-parser-js";
 
 const HASH_SALT = process.env.ANALYTICS_SALT || "rayhan-portfolio-analytics-salt-2026";
 
@@ -21,31 +22,31 @@ export function generateVisitorHash(
 }
 
 export function parseDevice(userAgent: string): "desktop" | "mobile" | "tablet" {
-  const ua = userAgent.toLowerCase();
-  if (/tablet|ipad|playbook|silk/i.test(ua)) return "tablet";
-  if (/mobile|iphone|android|ipod|blackberry|opera mini|iemobile/i.test(ua))
-    return "mobile";
+  try {
+    const parser = new UAParser(userAgent);
+    const type = parser.getResult().device.type;
+    if (type === "tablet") return "tablet";
+    if (type === "mobile") return "mobile";
+    if (!type && /Android|iPhone|Mobile/i.test(userAgent)) return "mobile";
+  } catch {}
   return "desktop";
 }
 
 export function parseBrowser(userAgent: string): string {
-  const ua = userAgent.toLowerCase();
-  if (ua.includes("edg/")) return "Edge";
-  if (ua.includes("chrome") && !ua.includes("edg/")) return "Chrome";
-  if (ua.includes("safari") && !ua.includes("chrome")) return "Safari";
-  if (ua.includes("firefox")) return "Firefox";
-  if (ua.includes("opera") || ua.includes("opr/")) return "Opera";
+  try {
+    const parser = new UAParser(userAgent);
+    const name = parser.getResult().browser.name;
+    if (name) return name;
+  } catch {}
   return "Other";
 }
 
 export function parseOS(userAgent: string): string {
-  const ua = userAgent.toLowerCase();
-  if (ua.includes("windows nt 10.0") || ua.includes("windows nt 11.0") || ua.includes("win"))
-    return "Windows";
-  if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) return "iOS";
-  if (ua.includes("macintosh") || ua.includes("mac os x")) return "macOS";
-  if (ua.includes("android")) return "Android";
-  if (ua.includes("linux")) return "Linux";
+  try {
+    const parser = new UAParser(userAgent);
+    const name = parser.getResult().os.name;
+    if (name) return name;
+  } catch {}
   return "Other";
 }
 
@@ -85,6 +86,10 @@ export interface TrackVisitorParams {
   durationSeconds?: number;
   event?: "pageview" | "heartbeat";
   deviceModel?: string;
+  gpuRenderer?: string;
+  screenWidth?: number;
+  screenHeight?: number;
+  devicePixelRatio?: number;
 }
 
 /**
@@ -100,6 +105,10 @@ export async function trackVisitorEvent({
   durationSeconds = 0,
   event = "pageview",
   deviceModel = "",
+  gpuRenderer = "",
+  screenWidth = 0,
+  screenHeight = 0,
+  devicePixelRatio = 1,
 }: TrackVisitorParams) {
   try {
     await connectToDatabase();
@@ -110,6 +119,10 @@ export async function trackVisitorEvent({
     const cleanDeviceModel = resolveDeviceModel({
       userAgent,
       clientModel: deviceModel,
+      gpuRenderer,
+      screenWidth,
+      screenHeight,
+      devicePixelRatio,
     });
     const browser = parseBrowser(userAgent);
     const os = parseOS(userAgent);

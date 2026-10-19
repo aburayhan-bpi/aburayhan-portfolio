@@ -156,8 +156,8 @@ export default function RegisterPage() {
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-background text-foreground">
       {/* Brand Hero Panel (Desktop) */}
       <AuthSidePanel
-        heading="Start your hassle-free student housing journey"
-        subheading="Join portfolio  to find mess seats, shared flats, or list your student rental properties with zero intermediary broker fees."
+        heading="Developer Workspace"
+        subheading="Explore modern full-stack engineering, interactive project showcases, and system architecture."
       />
 
       {/* Right Column: Clean, Compact Registration Form */}
@@ -168,15 +168,15 @@ export default function RegisterPage() {
             <Link
               href="/"
               className="inline-flex items-center justify-center gap-2 group cursor-pointer focus:outline-hidden"
-              aria-label="portfolio  Home"
+              aria-label="Abu Rayhan Home"
             >
               <Image
-                src="/portfolio-.png"
-                alt="portfolio "
-                width={150}
-                height={38}
+                src="/logo.svg"
+                alt="Abu Rayhan"
+                width={130}
+                height={32}
                 priority
-                className="h-8 w-auto object-contain mx-auto"
+                className="h-7 w-auto object-contain mx-auto"
               />
             </Link>
           </div>
@@ -187,7 +187,7 @@ export default function RegisterPage() {
               Create Your Account
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground">
-              Join portfolio to find or list verified student rentals and messes
+              Sign up to collaborate and explore project demonstrations
             </p>
           </div>
 
@@ -473,7 +473,7 @@ export default function RegisterPage() {
           {/* Security note */}
           <div className="pt-2 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
             <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-            <span>Direct owner connect • Verified student community</span>
+            <span>Secure Authentication • Protected Session</span>
           </div>
         </div>
       </div>

@@ -866,8 +866,12 @@ export function Analytics() {
                       <td className="py-2.5 px-3 whitespace-nowrap">
                         <div className="flex flex-col">
                           <span className="font-semibold text-foreground text-xs flex items-center gap-1.5">
-                            <Icons.Monitor className="w-3.5 h-3.5 text-primary shrink-0" />
-                            {evt.deviceModel || (evt.device === "desktop" ? "Desktop PC" : "Mobile Device")}
+                            {evt.device === "mobile" || evt.device === "tablet" ? (
+                              <Icons.Smartphone className="w-3.5 h-3.5 text-primary shrink-0" />
+                            ) : (
+                              <Icons.Monitor className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                            )}
+                            {evt.deviceModel || (evt.device === "desktop" ? "Desktop PC" : evt.device === "tablet" ? "Tablet Device" : "Mobile Device")}
                           </span>
                           <span className="text-[11px] text-muted-foreground font-mono mt-0.5 capitalize">
                             {evt.os && evt.os !== "Unknown OS" ? evt.os : "Windows"} • {evt.device}
