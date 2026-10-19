@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       lastName: "Rayhan",
       role: loggedInUser?.role || "ADMIN",
       avatar: loggedInUser?.avatar || "/logo.svg",
-      phone: "+880 1789-322199",
+      phone: "+880 171 985 7898",
       location: "Sherpur, Bogura, Bangladesh",
     };
 

@@ -53,6 +53,15 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: "/(logo.svg|icon.svg)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+          },
+        ],
+      },
     ];
   },
 };

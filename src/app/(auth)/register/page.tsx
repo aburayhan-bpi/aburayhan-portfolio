@@ -157,7 +157,7 @@ export default function RegisterPage() {
       {/* Brand Hero Panel (Desktop) */}
       <AuthSidePanel
         heading="Developer Workspace"
-        subheading="Explore modern full-stack engineering, interactive project showcases, and system architecture."
+        subheading="Explore modern web engineering, interactive project showcases, and frontend architecture."
       />
 
       {/* Right Column: Clean, Compact Registration Form */}

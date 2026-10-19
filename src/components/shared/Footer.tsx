@@ -73,7 +73,7 @@ const Footer = () => {
             </Link>
             <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
               {settings.bio ||
-                "Full-Stack Software Engineer specializing in Next.js, Node.js, cloud APIs, and high-performance digital products. Available for global remote opportunities and consulting."}
+                "Frontend Developer specializing in Next.js, React, modern web UI, and high-performance digital products. Available for global remote opportunities and consulting."}
             </p>
             <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>

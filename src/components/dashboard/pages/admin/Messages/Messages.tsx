@@ -33,15 +33,15 @@ export interface AdminMessage {
 const SMART_TEMPLATES = [
   {
     label: "💼 Schedule 15-min Call",
-    text: "Hi {{name}},\n\nThank you for reaching out through my portfolio! I would love to learn more about the opportunity and your team. Would you be open to a brief 15-20 minute introductory call this week?\n\nPlease feel free to propose a few times that suit your schedule best.\n\nBest regards,\nMd Abu Rayhan\nFull-Stack & Frontend Software Engineer",
+    text: "Hi {{name}},\n\nThank you for reaching out through my portfolio! I would love to learn more about the opportunity and your team. Would you be open to a brief 15-20 minute introductory call this week?\n\nPlease feel free to propose a few times that suit your schedule best.\n\nBest regards,\nMd Abu Rayhan\nFrontend Developer",
   },
   {
     label: "💻 Project Scope & Estimates",
-    text: "Hi {{name}},\n\nThank you for contacting me regarding your {{projectType}} project! I've reviewed your brief and I'm very interested in helping bring this to life.\n\nCould you share a bit more detail on your target launch timeline and any specific technical requirements or UI preferences you have in mind?\n\nLooking forward to collaborating!\n\nBest regards,\nMd Abu Rayhan\nFull-Stack Software Engineer",
+    text: "Hi {{name}},\n\nThank you for contacting me regarding your {{projectType}} project! I've reviewed your brief and I'm very interested in helping bring this to life.\n\nCould you share a bit more detail on your target launch timeline and any specific technical requirements or UI preferences you have in mind?\n\nLooking forward to collaborating!\n\nBest regards,\nMd Abu Rayhan\nFrontend Developer",
   },
   {
     label: "🤝 General Inquiry Response",
-    text: "Hi {{name}},\n\nThank you for your message! I've received your inquiry and wanted to acknowledge it right away.\n\nI will review the details and get back to you shortly. In the meantime, feel free to explore my latest live production case studies at aburayhan.dev.\n\nWarm regards,\nMd Abu Rayhan\nFull-Stack Software Engineer",
+    text: "Hi {{name}},\n\nThank you for your message! I've received your inquiry and wanted to acknowledge it right away.\n\nI will review the details and get back to you shortly. In the meantime, feel free to explore my latest live production case studies on my portfolio.\n\nWarm regards,\nMd Abu Rayhan\nFrontend Developer",
   },
 ];
 

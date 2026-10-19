@@ -10,22 +10,39 @@ export async function GET() {
     if (!settings) {
       settings = await SiteSetting.create({
         siteName: "Md Abu Rayhan",
-        tagline: "Full-Stack Software Engineer & UI/UX Designer",
+        tagline: "Frontend Developer",
         primaryEmail: "aburayhan.bpi@gmail.com",
-        location: "Sherpur, Bogura, Bangladesh (UTC+6)",
+        location: "Sherpur, Bogura, Bangladesh",
         availabilityStatus: "Available for New Contracts & Roles",
         responseTime: "< 2 hours",
-        bio: "Full-Stack Software Engineer specialized in building high-performance Next.js applications, resilient REST APIs, and production ERP, SaaS & marketplace platforms.",
+        bio: "Frontend Developer with experience in React.js, Next.js, TypeScript, Redux Toolkit, and RTK Query. Experienced in building full-stack applications using Node.js, Express.js, REST APIs, and MongoDB across ERP, SaaS, and marketplace products. Skilled in building responsive, maintainable interfaces and translating product requirements into practical solutions.",
         githubUrl: "https://github.com",
         linkedinUrl: "https://linkedin.com",
         twitterUrl: "https://twitter.com",
         leetcodeUrl: "",
         blogUrl: "",
         resumeUrl: "",
-        whatsapp: "+880 1789-322199",
-        yearsOfExperience: 5,
-        completedProjectsCount: 45,
+        whatsapp: "+880 171 985 7898",
+        yearsOfExperience: 3,
+        completedProjectsCount: 15,
       });
+    } else {
+      let changed = false;
+      if (settings.tagline && (settings.tagline.toLowerCase().includes("full-stack") || settings.tagline.toLowerCase().includes("full stack"))) {
+        settings.tagline = "Frontend Developer";
+        changed = true;
+      }
+      if (settings.bio && (settings.bio.toLowerCase().includes("full-stack") || settings.bio.toLowerCase().includes("full stack"))) {
+        settings.bio = "Frontend Developer with experience in React.js, Next.js, TypeScript, Redux Toolkit, and RTK Query. Experienced in building full-stack applications using Node.js, Express.js, REST APIs, and MongoDB across ERP, SaaS, and marketplace products. Skilled in building responsive, maintainable interfaces and translating product requirements into practical solutions.";
+        changed = true;
+      }
+      if (!settings.whatsapp || settings.whatsapp.includes("1789")) {
+        settings.whatsapp = "+880 171 985 7898";
+        changed = true;
+      }
+      if (changed) {
+        await settings.save();
+      }
     }
 
     return NextResponse.json({

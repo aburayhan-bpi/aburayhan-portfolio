@@ -31,7 +31,7 @@ const SiteSettingSchema: Schema<ISiteSetting> = new Schema(
     },
     tagline: {
       type: String,
-      default: "Full-Stack Software Engineer & UI/UX Designer",
+      default: "Frontend Developer",
       trim: true,
     },
     primaryEmail: {
@@ -58,7 +58,7 @@ const SiteSettingSchema: Schema<ISiteSetting> = new Schema(
     bio: {
       type: String,
       default:
-        "Full-Stack Software Engineer specialized in building high-performance Next.js applications, resilient REST APIs, and production ERP, SaaS & marketplace platforms.",
+        "Frontend Developer with experience in React.js, Next.js, TypeScript, Redux Toolkit, and RTK Query. Experienced in building full-stack applications using Node.js, Express.js, REST APIs, and MongoDB across ERP, SaaS, and marketplace products. Skilled in building responsive, maintainable interfaces and translating product requirements into practical solutions.",
       trim: true,
     },
     githubUrl: {
@@ -93,7 +93,7 @@ const SiteSettingSchema: Schema<ISiteSetting> = new Schema(
     },
     whatsapp: {
       type: String,
-      default: "+880 1789-322199",
+      default: "+880 171 985 7898",
       trim: true,
     },
     yearsOfExperience: {

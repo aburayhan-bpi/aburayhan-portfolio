@@ -1294,7 +1294,7 @@ export function Analytics() {
             </div>
           ) : (
             <div className="py-12 text-center text-muted-foreground text-sm font-mono">
-              No live events recorded yet. Open aburayhan.dev in your browser to
+              No live events recorded yet. Open your portfolio in your browser to
               see events stream in.
             </div>
           )

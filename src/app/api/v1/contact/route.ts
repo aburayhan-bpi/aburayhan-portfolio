@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       savedMessage = await Message.create({
         name,
         email,
-        projectType: projectType || "Full-Stack Web App",
+        projectType: projectType || "Frontend Web App",
         message,
         isRead: false,
       });

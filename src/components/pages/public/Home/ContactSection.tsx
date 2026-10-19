@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { copyToClipboard } from "@/lib/clipboard";
 
 const PROJECT_TYPES = [
-  "Full-Stack Web App",
+  "Frontend Web App",
   "Frontend / Next.js",
   "Enterprise ERP / SaaS",
   "Marketplace Platform",
@@ -22,7 +22,7 @@ export const ContactSection = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    projectType: "Full-Stack Web App",
+    projectType: "Frontend Web App",
     subject: "",
     message: "",
   });
@@ -65,7 +65,7 @@ export const ContactSection = () => {
         setFormData({
           name: "",
           email: "",
-          projectType: "Full-Stack Web App",
+          projectType: "Frontend Web App",
           subject: "",
           message: "",
         });
@@ -83,8 +83,8 @@ export const ContactSection = () => {
     <section id="contact" className="py-16 md:py-24 border-t border-border/60 relative">
       <div className="customContainer mx-auto px-4 sm:px-6 lg:px-8">
         <HeaderTitle
-          title="Let's Build Something Exceptional"
-          subtitle="Interested in hiring, collaborating, or consulting on scalable web systems? Reach out directly."
+          title="Let's Connect & Work Together"
+          subtitle="Interested in hiring, collaborating on a project, or discussing an open frontend role? Reach out directly."
           titleColor="white"
           titleSize="xl"
           alignment="center"
@@ -145,10 +145,10 @@ export const ContactSection = () => {
                   <div>
                     <p className="text-[11px] font-mono text-muted-foreground">Phone &amp; WhatsApp</p>
                     <a
-                      href={`tel:${settings.whatsapp?.replace(/[\s-]/g, "") || "+8801789322199"}`}
+                      href={`tel:${settings.whatsapp?.replace(/[\s-]/g, "") || "+8801719857898"}`}
                       className="text-sm font-medium text-foreground hover:text-primary transition-colors"
                     >
-                      {settings.whatsapp || "+880 1789-322199"}
+                      {settings.whatsapp || "+880 171 985 7898"}
                     </a>
                   </div>
                 </div>

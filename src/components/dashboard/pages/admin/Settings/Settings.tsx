@@ -45,21 +45,21 @@ export const Settings = () => {
   // Form State
   const [formData, setFormData] = useState<SiteSettingsData>({
     siteName: "Md Abu Rayhan",
-    tagline: "Full-Stack Software Engineer & UI/UX Designer",
+    tagline: "Frontend Developer",
     primaryEmail: "aburayhan.bpi@gmail.com",
-    location: "Sherpur, Bogura, Bangladesh (UTC+6)",
+    location: "Sherpur, Bogura, Bangladesh",
     availabilityStatus: "Available for New Contracts & Roles",
     responseTime: "< 2 hours",
-    bio: "Full-Stack Software Engineer specialized in building high-performance Next.js applications, resilient REST APIs, and production ERP, SaaS & marketplace platforms.",
+    bio: "Frontend Developer with experience in React.js, Next.js, TypeScript, Redux Toolkit, and RTK Query. Experienced in building full-stack applications using Node.js, Express.js, REST APIs, and MongoDB across ERP, SaaS, and marketplace products. Skilled in building responsive, maintainable interfaces and translating product requirements into practical solutions.",
     githubUrl: "https://github.com",
     linkedinUrl: "https://linkedin.com",
     twitterUrl: "https://twitter.com",
     leetcodeUrl: "",
     blogUrl: "",
     resumeUrl: "",
-    whatsapp: "+880 1789-322199",
-    yearsOfExperience: 5,
-    completedProjectsCount: 45,
+    whatsapp: "+880 171 985 7898",
+    yearsOfExperience: 3,
+    completedProjectsCount: 15,
   });
 
   // Password & Real-World OTP State
@@ -374,7 +374,7 @@ export const Settings = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, tagline: e.target.value })
                       }
-                      placeholder="e.g. Full-Stack Software Engineer & UI/UX Designer"
+                      placeholder="e.g. Frontend Developer"
                       className="bg-secondary/30 border-border/80 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground h-11 px-4 rounded-xl"
                     />
                   </div>
@@ -489,7 +489,7 @@ export const Settings = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, whatsapp: e.target.value })
                       }
-                      placeholder="+880 1789-322199"
+                      placeholder="+880 171 985 7898"
                       className="bg-secondary/30 border-border/80 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground h-11 px-4 rounded-xl"
                     />
                   </div>

@@ -105,7 +105,7 @@ export function getOtpEmailHtml({
           <tr>
             <td style="padding: 20px 32px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
               <p style="margin: 0 0 4px; font-size: 12px; color: #64748b;">
-                Md Abu Rayhan • Full-Stack Software Engineer
+                Md Abu Rayhan • Frontend Developer
               </p>
               <p style="margin: 0; font-size: 11px; color: #94a3b8;">
                 Automated Transactional Dispatcher • Dhaka, Bangladesh
@@ -211,7 +211,7 @@ export function getPasswordChangedEmailHtml({
           <tr>
             <td style="padding: 20px 32px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
               <p style="margin: 0 0 4px; font-size: 12px; color: #64748b;">
-                Md Abu Rayhan • Full-Stack Software Engineer
+                Md Abu Rayhan • Frontend Developer
               </p>
               <p style="margin: 0; font-size: 11px; color: #94a3b8;">
                 Automated Transactional Dispatcher • Dhaka, Bangladesh
@@ -259,7 +259,7 @@ export function getInquiryReplyEmailHtml({
                 <tr>
                   <td>
                     <div style="font-size: 18px; font-weight: 700; color: #0f172a; letter-spacing: -0.3px;">Md Abu Rayhan</div>
-                    <div style="font-size: 13px; color: #64748b; margin-top: 2px;">Full-Stack &amp; Frontend Software Engineer</div>
+                    <div style="font-size: 13px; color: #64748b; margin-top: 2px;">Frontend Developer</div>
                   </td>
                   <td align="right">
                     <span style="display: inline-block; padding: 4px 10px; background-color: #eff6ff; color: #0284c7; border-radius: 9999px; font-size: 11px; font-weight: 600;">${projectType}</span>
@@ -289,12 +289,12 @@ ${replyText.trim()}
               <!-- Sign-off -->
               <div style="border-top: 1px solid #e2e8f0; padding-top: 20px;">
                 <div style="font-size: 14px; font-weight: 700; color: #0f172a;">Md Abu Rayhan</div>
-                <div style="font-size: 13px; color: #64748b;">Full-Stack Software Engineer</div>
+                <div style="font-size: 13px; color: #64748b;">Frontend Developer</div>
                 <div style="font-size: 13px; color: #64748b; margin-top: 2px;">
-                  Email: <a href="mailto:aburayhan.bpi@gmail.com" style="color: #0284c7; text-decoration: none;">aburayhan.bpi@gmail.com</a> • WhatsApp: <a href="https://wa.me/8801789322199" style="color: #0284c7; text-decoration: none;">+880 1789-322199</a>
+                  Email: <a href="mailto:aburayhan.bpi@gmail.com" style="color: #0284c7; text-decoration: none;">aburayhan.bpi@gmail.com</a> • WhatsApp: <a href="https://wa.me/8801719857898" style="color: #0284c7; text-decoration: none;">+880 171 985 7898</a>
                 </div>
                 <div style="font-size: 13px; color: #64748b; margin-top: 2px;">
-                  Portfolio: <a href="https://aburayhan.dev" style="color: #0284c7; text-decoration: none;">aburayhan.dev</a>
+                  Portfolio: <a href="${process.env.NEXT_PUBLIC_APP_URL || '#'}" style="color: #0284c7; text-decoration: none;">Portfolio Profile</a>
                 </div>
               </div>
             </td>
@@ -348,7 +348,7 @@ export function getInquiryNotificationHtml({
                 <tr>
                   <td>
                     <div style="font-size: 16px; font-weight: 700; color: #ffffff;">🚀 New Portfolio Inquiry</div>
-                    <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">Inbound Lead from aburayhan.dev</div>
+                    <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">Inbound Lead from Portfolio Website</div>
                   </td>
                   <td align="right">
                     <span style="display: inline-block; padding: 4px 10px; background-color: #1e293b; color: #38bdf8; border: 1px solid #334155; border-radius: 6px; font-size: 11px; font-weight: 600;">${projectType}</span>

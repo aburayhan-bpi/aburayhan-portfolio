@@ -23,21 +23,21 @@ export interface SiteSettings {
 
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   siteName: "Md Abu Rayhan",
-  tagline: "Full-Stack Software Engineer & UI/UX Designer",
+  tagline: "Frontend Developer",
   primaryEmail: "aburayhan.bpi@gmail.com",
-  location: "Sherpur, Bogura, Bangladesh (UTC+6)",
+  location: "Sherpur, Bogura, Bangladesh",
   availabilityStatus: "Available for New Contracts & Roles",
   responseTime: "< 2 hours",
-  bio: "Full-Stack Software Engineer specialized in building high-performance Next.js applications, resilient REST APIs, and production ERP, SaaS & marketplace platforms.",
+  bio: "Frontend Developer with experience in React.js, Next.js, TypeScript, Redux Toolkit, and RTK Query. Experienced in building full-stack applications using Node.js, Express.js, REST APIs, and MongoDB across ERP, SaaS, and marketplace products. Skilled in building responsive, maintainable interfaces and translating product requirements into practical solutions.",
   githubUrl: "https://github.com",
   linkedinUrl: "https://linkedin.com",
   twitterUrl: "https://twitter.com",
   leetcodeUrl: "",
   blogUrl: "",
   resumeUrl: "",
-  whatsapp: "+880 1789-322199",
-  yearsOfExperience: 5,
-  completedProjectsCount: 45,
+  whatsapp: "+880 171 985 7898",
+  yearsOfExperience: 3,
+  completedProjectsCount: 15,
 };
 
 interface SiteSettingsContextType {
@@ -54,14 +54,31 @@ const SiteSettingsContext = createContext<SiteSettingsContextType>({
 
 const mapSiteSettings = (raw: Record<string, unknown> | null | undefined): SiteSettings => {
   if (!raw) return DEFAULT_SITE_SETTINGS;
+
+  const rawTagline = (raw.tagline as string) || DEFAULT_SITE_SETTINGS.tagline;
+  const rawBio = (raw.bio as string) || DEFAULT_SITE_SETTINGS.bio;
+
+  // Sanitize any legacy Full-Stack designation to Frontend Developer
+  const cleanTagline = rawTagline.toLowerCase().includes("full-stack") || rawTagline.toLowerCase().includes("full stack")
+    ? "Frontend Developer"
+    : rawTagline;
+
+  const cleanBio = rawBio
+    .replace(/Full-Stack Software Engineer & UI\/UX Designer/gi, "Frontend Developer")
+    .replace(/Full-Stack Software Engineer/gi, "Frontend Developer")
+    .replace(/Full-Stack Engineer/gi, "Frontend Developer")
+    .replace(/Full-Stack Developer/gi, "Frontend Developer")
+    .replace(/Full-Stack/gi, "Frontend")
+    .replace(/Full Stack/gi, "Frontend");
+
   return {
     siteName: (raw.siteName as string) || DEFAULT_SITE_SETTINGS.siteName,
-    tagline: (raw.tagline as string) || DEFAULT_SITE_SETTINGS.tagline,
+    tagline: cleanTagline,
     primaryEmail: (raw.primaryEmail as string) || DEFAULT_SITE_SETTINGS.primaryEmail,
     location: (raw.location as string) || DEFAULT_SITE_SETTINGS.location,
     availabilityStatus: (raw.availabilityStatus as string) || DEFAULT_SITE_SETTINGS.availabilityStatus,
     responseTime: (raw.responseTime as string) || DEFAULT_SITE_SETTINGS.responseTime,
-    bio: (raw.bio as string) || DEFAULT_SITE_SETTINGS.bio,
+    bio: cleanBio,
     githubUrl: (raw.githubUrl as string) || DEFAULT_SITE_SETTINGS.githubUrl,
     linkedinUrl: (raw.linkedinUrl as string) || DEFAULT_SITE_SETTINGS.linkedinUrl,
     twitterUrl: (raw.twitterUrl as string) || DEFAULT_SITE_SETTINGS.twitterUrl,
@@ -82,11 +99,15 @@ const mapSiteSettings = (raw: Record<string, unknown> | null | undefined): SiteS
 
 export const SiteSettingsProvider = ({
   children,
+  initialSettings,
 }: {
   children: React.ReactNode;
+  initialSettings?: SiteSettings;
 }) => {
-  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [settings, setSettings] = useState<SiteSettings>(
+    initialSettings ? mapSiteSettings(initialSettings as unknown as Record<string, unknown>) : DEFAULT_SITE_SETTINGS
+  );
+  const [isLoading, setIsLoading] = useState<boolean>(!initialSettings);
 
   const fetchSettings = async () => {
     try {

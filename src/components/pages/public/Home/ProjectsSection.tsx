@@ -8,11 +8,13 @@ import { Icons } from "@/utils/icons";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
-interface ProjectItem {
+import { SerializedProject } from "@/lib/server/portfolioData";
+
+export interface ProjectItem {
   id: string;
   title: string;
   badge: string;
-  category: "Full-Stack ERP" | "Marketplace" | "SaaS Dashboard";
+  category: "Full-Stack ERP" | "Marketplace" | "SaaS Dashboard" | "Mobile App";
   mockUrl: string;
   tagline: string;
   description: string;
@@ -24,69 +26,33 @@ interface ProjectItem {
   imageUrl?: string;
 }
 
-const REAL_PROJECTS: ProjectItem[] = [
-  {
-    id: "raantech-erp",
-    title: "RaanTech — Business Operations ERP",
-    badge: "Active Development",
-    category: "Full-Stack ERP",
-    mockUrl: "https://raantech-erp.app/dashboard",
-    tagline: "End-to-End Enterprise Resource & Inventory Management Platform",
-    description:
-      "A comprehensive full-stack ERP architecture engineered to manage inventory, procurement, sales workflows, customer lifecycle, finances, and multi-branch staff administration.",
-    keyFeatures: [
-      "Product, supplier & purchase tracking with high-speed CSV/Excel data import & export.",
-      "Complete customer order lifecycle: returns, refunds, cancellations & automated email notifications.",
-      "Granular role-based staff administration (RBAC), audit activity logs & soft-delete data recovery.",
-    ],
-    techStack: ["Next.js", "TypeScript", "Redux Toolkit", "Node.js", "MongoDB", "Express.js"],
-    liveUrl: "https://raantech-demo.dev",
-    githubUrl: "https://github.com",
-    isPrivateRepo: false,
-  },
-  {
-    id: "uaepl8-marketplace",
-    title: "UAEPL8 — Premium Vehicle Plate Marketplace",
-    badge: "Client Production",
-    category: "Marketplace",
-    mockUrl: "https://uaepl8.ae/marketplace",
-    tagline: "High-Ticket Automotive Luxury Marketplace for the UAE",
-    description:
-      "Engineered for high-net-worth clients in the United Arab Emirates to discover, value, and trade premium vehicle registration plates with real-time valuation algorithms and VIP sourcing.",
-    keyFeatures: [
-      "Multi-facet search & filtering engine by Emirate, digit length, customized letters & plate code.",
-      "Automated dynamic plate valuation models and VIP custom plate sourcing requests.",
-      "Dedicated buyer & seller interfaces with real-time offer negotiation and admin approvals.",
-    ],
-    techStack: ["Next.js", "TypeScript", "Redux Toolkit", "Tailwind CSS", "Zod", "Framer Motion"],
-    liveUrl: "https://uaepl8.ae",
-    githubUrl: "https://github.com",
-    isPrivateRepo: true,
-  },
-  {
-    id: "fansphere-saas",
-    title: "FanSphere — SaaS-Ready Admin Dashboard",
-    badge: "Enterprise Template",
-    category: "SaaS Dashboard",
-    mockUrl: "https://fansphere.io/admin",
-    tagline: "Modular Enterprise Console for Analytics, Marketplaces & Events",
-    description:
-      "A production-ready, modular dashboard foundation built with reusable component architecture, high-density analytics charts, and strict TypeScript contracts.",
-    keyFeatures: [
-      "Modular dashboard architecture featuring 30+ reusable UI components and shared design tokens.",
-      "Role-Based Access Control (RBAC) with secure session handling and protected route wrappers.",
-      "Interactive telemetry charts, paginated data tables, dialog modals, and API-ready RTK hooks.",
-    ],
-    techStack: ["Next.js", "React 19", "Redux Toolkit", "Radix UI", "Recharts", "Framer Motion"],
-    liveUrl: "https://fansphere.dev",
-    githubUrl: "https://github.com",
-    isPrivateRepo: true,
-  },
-];
+function mapApiProjects(rawList: SerializedProject[]): ProjectItem[] {
+  return rawList.map((p) => ({
+    id: p.id,
+    title: p.title,
+    badge: p.status === "Live" ? "Active Development" : (p.status || "Live"),
+    category: p.category as ProjectItem["category"],
+    mockUrl: p.mockUrl || `https://${p.id}.app`,
+    tagline: p.tagline,
+    description: p.description,
+    keyFeatures: p.keyFeatures || [],
+    techStack: p.techStack || [],
+    liveUrl: p.liveUrl,
+    githubUrl: p.githubUrl,
+    isPrivateRepo: !!p.isPrivateRepo,
+    imageUrl: p.imageUrl,
+  }));
+}
 
-export const ProjectsSection = () => {
+interface ProjectsSectionProps {
+  initialProjects?: SerializedProject[];
+}
+
+export const ProjectsSection = ({ initialProjects }: ProjectsSectionProps) => {
   const [activeCategory, setActiveCategory] = useState<string>("All");
-  const [projects, setProjects] = useState<ProjectItem[]>(REAL_PROJECTS);
+  const [projects, setProjects] = useState<ProjectItem[]>(() =>
+    mapApiProjects(initialProjects || []),
+  );
   const { settings } = useSiteSettings();
 
   useEffect(() => {
@@ -94,41 +60,10 @@ export const ProjectsSection = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
-          const mapped: ProjectItem[] = data.data.map((p: {
-            id: string;
-            title: string;
-            status?: string;
-            category: "Full-Stack ERP" | "Marketplace" | "SaaS Dashboard";
-            mockUrl?: string;
-            tagline: string;
-            description: string;
-            keyFeatures?: string[];
-            techStack?: string[];
-            liveUrl?: string;
-            githubUrl?: string;
-            isPrivateRepo?: boolean;
-            imageUrl?: string;
-          }) => ({
-            id: p.id,
-            title: p.title,
-            badge: p.status === "Live" ? "Active Development" : (p.status || "Live"),
-            category: p.category,
-            mockUrl: p.mockUrl || `https://${p.id}.app`,
-            tagline: p.tagline,
-            description: p.description,
-            keyFeatures: p.keyFeatures || [],
-            techStack: p.techStack || [],
-            liveUrl: p.liveUrl,
-            githubUrl: p.githubUrl,
-            isPrivateRepo: !!p.isPrivateRepo,
-            imageUrl: p.imageUrl,
-          }));
-          setProjects(mapped);
+          setProjects(mapApiProjects(data.data));
         }
       })
-      .catch((err) => {
-        console.warn("Using default static projects cache:", err);
-      });
+      .catch(() => {});
   }, []);
 
   const categories = ["All", "Full-Stack ERP", "Marketplace", "SaaS Dashboard"];

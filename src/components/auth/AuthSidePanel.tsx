@@ -52,7 +52,7 @@ export function AuthSidePanel({
                 Projects &amp; Case Studies
               </p>
               <p className="text-[11px] text-muted-foreground leading-tight">
-                Showcasing full-stack applications, scalable architectures, and interactive experiences.
+                Showcasing modern web applications, scalable architectures, and interactive experiences.
               </p>
             </div>
           </div>

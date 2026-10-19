@@ -130,13 +130,13 @@ export const SIDEBAR_ITEMS: SidebarItem[] = SIDEBAR_SECTIONS.flatMap(
 
 // website details for Abu Rayhan's Portfolio
 export const WEBSITE_DETAILS = {
-  SITE_NAME: "Abu Rayhan | Full-Stack Software Engineer & UI/UX Designer",
+  SITE_NAME: "Abu Rayhan | Frontend Developer",
   SITE_ONLY_NAME: "Abu Rayhan",
   SITE_TITLE: "Abu Rayhan",
-  SITE_TAGLINE: "Full-Stack Software Engineer & UI/UX Designer",
+  SITE_TAGLINE: "Frontend Developer",
   SITE_DESCRIPTION:
-    "Portfolio of Abu Rayhan — Senior Full-Stack Web Developer & UI/UX Designer specialized in scalable Next.js architectures, modern APIs, and high-performance digital products.",
-  SITE_DESC: "Full-Stack Software Engineer & UI/UX Designer",
+    "Portfolio of Abu Rayhan — Frontend Developer specialized in scalable Next.js architectures, modern web interfaces, and high-performance digital products.",
+  SITE_DESC: "Frontend Developer",
   SITE_DASHBOARD_TITLE: "Abu Rayhan • Admin Console",
   SITE_DASHBOARD_SUBTITLE: "Portfolio Content & Project Management",
   SITE_LOGO: "/logo.svg",

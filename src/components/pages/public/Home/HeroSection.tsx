@@ -14,22 +14,22 @@ export const HeroSection = () => {
   const { settings } = useSiteSettings();
   const statusConfig = getStatusConfig(settings.availabilityStatus);
 
-  const codeSnippet = `// ${settings.siteName || "Abu Rayhan"} • Senior Full-Stack Engineer
-const engineer: DeveloperProfile = {
+  const codeSnippet = `// ${settings.siteName || "Abu Rayhan"} • Frontend Developer
+const developer: DeveloperProfile = {
   name: "${settings.siteName || "Abu Rayhan"}",
-  role: "${settings.tagline || "Full-Stack Software Engineer & UI/UX Designer"}",
+  role: "${settings.tagline || "Frontend Developer"}",
   location: "${settings.location || "Dhaka, Bangladesh (Remote-Ready)"}",
   specialization: [
-    "Next.js App Router (Full-Stack Architecture)",
-    "Distributed Systems & Node.js Microservices",
+    "Next.js App Router & React Architecture",
     "Tailwind CSS, Radix UI & Design Systems",
-    "MongoDB, PostgreSQL & Redis Caching"
+    "TypeScript & High-Performance Web UI",
+    "RESTful API Integration & Client State"
   ],
   availableForHire: true,
   buildPhilosophy: "High-Performance, Zero-Fluff, Type-Safe"
 };
 
-export default engineer;`;
+export default developer;`;
 
   const handleCopy = async () => {
     const success = await copyToClipboard(codeSnippet);
@@ -71,19 +71,23 @@ export default engineer;`;
               <span className="text-xs font-mono text-muted-foreground">{settings.location}</span>
             </div>
 
-            {/* Prominent High-Hierarchy Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-[4.15rem] font-extrabold tracking-tight text-foreground leading-[1.08]">
-              Architecting{" "}
-              <span className="bg-gradient-to-r from-accent via-primary to-primary bg-clip-text text-transparent">
-                Scalable Web Systems
-              </span>{" "}
-              &amp; Intuitive Experiences.
-            </h1>
+            {/* Direct & Authentic High-Hierarchy Headline for Rank-1 Google SEO */}
+            <div>
+              <h1 className="text-4xl sm:text-5xl lg:text-[4rem] font-extrabold tracking-tight text-foreground leading-[1.08]">
+                Hi, I&apos;m{" "}
+                <span className="bg-gradient-to-r from-accent via-primary to-primary bg-clip-text text-transparent">
+                  {settings.siteName || "Abu Rayhan"}
+                </span>
+                .
+                <span className="block text-2xl sm:text-3xl lg:text-4xl font-semibold text-muted-foreground mt-2">
+                  {settings.tagline || "Frontend Developer"}
+                </span>
+              </h1>
+            </div>
 
-            {/* Direct & Authentic Engineering Bio with max-w-xl breathing room */}
+            {/* Direct & Authentic Engineering Bio from Resume */}
             <p className="text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed">
-              Hi, I&apos;m <span className="text-foreground font-semibold">{settings.siteName || "Abu Rayhan"}</span>.{" "}
-              {settings.bio || "A Frontend & Full-Stack Engineer specialized in building high-performance Next.js applications, resilient REST APIs, and production ERP, SaaS & marketplace platforms."}
+              {settings.bio || "Frontend Developer with experience in React.js, Next.js, TypeScript, Redux Toolkit, and RTK Query. Building clean, responsive interfaces and practical web applications."}
             </p>
 
             {/* Core Tech Stack Badges (Clean & Focused) */}
@@ -192,7 +196,7 @@ export default engineer;`;
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    Architect.ts
+                    developer.ts
                   </button>
                   <button
                     onClick={() => setActiveTab("stack")}
@@ -224,9 +228,9 @@ export default engineer;`;
                   <pre className="text-left font-mono">
                     <code>
                       <span className="text-primary">const</span>{" "}
-                      <span className="text-accent font-semibold">engineer</span> = &#123;{"\n"}
+                      <span className="text-accent font-semibold">developer</span> = &#123;{"\n"}
                       {"  "}name: <span className="text-success">&quot;{settings.siteName || "Abu Rayhan"}&quot;</span>,{"\n"}
-                      {"  "}role: <span className="text-success">&quot;{settings.tagline || "Full-Stack Engineer & UI/UX"}&quot;</span>,{"\n"}
+                      {"  "}role: <span className="text-success">&quot;{settings.tagline || "Frontend Developer"}&quot;</span>,{"\n"}
                       {"  "}expYears: <span className="text-primary">{settings.yearsOfExperience || 5}+</span>,{"\n"}
                       {"  "}stack: [&#39;Next.js&#39;, &#39;TypeScript&#39;, &#39;Node.js&#39;, &#39;MongoDB&#39;],{"\n"}
                       {"  "}status: <span className="text-success">&quot;{settings.availabilityStatus || "🟢 Available for Work"}&quot;</span>,{"\n"}

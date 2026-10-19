@@ -5,139 +5,78 @@ import { Icons } from "@/utils/icons";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-const SKILL_GROUPS = [
+import { SerializedSkill } from "@/lib/server/portfolioData";
+
+const CATEGORY_META = [
   {
+    category: "Frontend",
     title: "Core Frontend & Frameworks",
     tagline: "Primary Production Specialization",
     icon: Icons.LayoutDashboard,
     description:
       "Crafting responsive, accessible, and high-velocity web applications using modern React architecture and clean component patterns.",
-    skills: [
-      "Next.js (App Router)",
-      "React.js 19",
-      "TypeScript",
-      "JavaScript (ES6+)",
-      "Redux Toolkit",
-      "RTK Query",
-      "Tailwind CSS v4",
-      "Shadcn UI & Radix",
-    ],
   },
   {
+    category: "Backend",
     title: "Backend & Data Pipelines",
-    tagline: "Full-Stack API Engineering",
+    tagline: "Serverless & API Integration",
     icon: Icons.CiStreamOn,
     description:
       "Designing scalable serverless endpoints, business logic, secure authentication, and data modeling for enterprise products.",
-    skills: [
-      "Node.js",
-      "Express.js",
-      "MongoDB & Mongoose",
-      "RESTful API Design",
-      "JWT Authentication",
-      "Firebase",
-    ],
   },
   {
+    category: "AI & Tools",
     title: "AI Tools & Modern Workflow",
     tagline: "10x Engineering Velocity",
     icon: Icons.BsStars,
     description:
       "Leveraging state-of-the-art AI-augmented developer tooling to accelerate sprint velocity, code quality, and prototyping.",
-    skills: [
-      "Cursor IDE",
-      "GitHub Copilot",
-      "Claude 3.7 & ChatGPT",
-      "Figma to Code",
-      "Git & GitHub Flow",
-      "Responsive UI Systems",
-    ],
   },
   {
+    category: "DevOps & Cloud",
     title: "Currently Exploring & Growth",
     tagline: "Infrastructure & Continuous Learning",
     icon: Icons.Settings,
     description:
       "Expanding system design horizons across relational databases, containerization, and automated deployment pipelines.",
-    skills: [
-      "PostgreSQL",
-      "Prisma ORM",
-      "Docker Basics",
-      "CI/CD Workflows",
-      "International Client Collab",
-      "Agile Methodologies",
-    ],
   },
 ];
 
-export const SkillsSection = () => {
-  const [skillGroups, setSkillGroups] = useState(SKILL_GROUPS);
+function buildSkillGroups(skillsList: { name: string; category: string }[]) {
+  return CATEGORY_META.map((cat) => ({
+    title: cat.title,
+    tagline: cat.tagline,
+    icon: cat.icon,
+    description: cat.description,
+    skills: Array.from(
+      new Set(
+        skillsList
+          .filter((s) => s.category === cat.category)
+          .map((s) => s.name?.trim())
+          .filter(Boolean),
+      ),
+    ),
+  }));
+}
+
+interface SkillsSectionProps {
+  initialSkills?: SerializedSkill[];
+}
+
+export const SkillsSection = ({ initialSkills }: SkillsSectionProps) => {
+  const [skillGroups, setSkillGroups] = useState(() =>
+    buildSkillGroups(initialSkills || []),
+  );
 
   useEffect(() => {
     fetch("/api/v1/skills")
       .then((res) => res.json())
       .then((data) => {
         if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
-          const apiSkills = data.data as { name: string; category: string }[];
-          
-          const frontendSkills = Array.from(
-            new Set(
-              apiSkills
-                .filter((s) => s.category === "Frontend")
-                .map((s) => s.name?.trim())
-                .filter(Boolean),
-            ),
-          );
-          const backendSkills = Array.from(
-            new Set(
-              apiSkills
-                .filter((s) => s.category === "Backend")
-                .map((s) => s.name?.trim())
-                .filter(Boolean),
-            ),
-          );
-          const aiSkills = Array.from(
-            new Set(
-              apiSkills
-                .filter((s) => s.category === "AI & Tools")
-                .map((s) => s.name?.trim())
-                .filter(Boolean),
-            ),
-          );
-          const devopsSkills = Array.from(
-            new Set(
-              apiSkills
-                .filter((s) => s.category === "DevOps & Cloud")
-                .map((s) => s.name?.trim())
-                .filter(Boolean),
-            ),
-          );
-
-          const dynamicGroups = [
-            {
-              ...SKILL_GROUPS[0],
-              skills: frontendSkills.length ? frontendSkills : SKILL_GROUPS[0].skills,
-            },
-            {
-              ...SKILL_GROUPS[1],
-              skills: backendSkills.length ? backendSkills : SKILL_GROUPS[1].skills,
-            },
-            {
-              ...SKILL_GROUPS[2],
-              skills: aiSkills.length ? aiSkills : SKILL_GROUPS[2].skills,
-            },
-            {
-              ...SKILL_GROUPS[3],
-              skills: devopsSkills.length ? devopsSkills : SKILL_GROUPS[3].skills,
-            },
-          ];
-
-          setSkillGroups(dynamicGroups);
+          setSkillGroups(buildSkillGroups(data.data));
         }
       })
-      .catch(() => {
-        // Fall back quietly to static SKILL_GROUPS
-      });
+      .catch(() => {});
   }, []);
 
   return (

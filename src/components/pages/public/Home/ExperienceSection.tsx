@@ -34,61 +34,23 @@ interface EducationItem {
   order?: number;
 }
 
-const EXPERIENCES = [
-  {
-    organization: "SM Technology",
-    title: "Frontend Developer",
-    period: "July 2025 – September 2026",
-    location: "Dhaka, Bangladesh • Remote / Hybrid",
-    type: "Full-Time",
-    highlights: [
-      "Engineered production web applications using Next.js, React.js, TypeScript, Redux Toolkit, and RTK Query.",
-      "Collaborated directly with backend teams and international clients to translate complex product specs into reliable, intuitive UIs.",
-      "Architected reusable component libraries and API-driven workflows across ERP, SaaS, and marketplace solutions.",
-      "Contributed to core frontend design patterns, reducing redundant code and speeding up sprint velocity.",
-    ],
-    tech: ["Next.js", "TypeScript", "Redux Toolkit", "RTK Query", "Tailwind CSS"],
-  },
-];
+import { SerializedExperience } from "@/lib/server/portfolioData";
 
-const EDUCATION_AND_CERTS = [
-  {
-    type: "Diploma in Engineering",
-    title: "Computer Technology",
-    organization: "Bogura Polytechnic Institute",
-    period: "2020 – 2024",
-    description:
-      "Core foundation in computer science principles, data structures, algorithms, and software development fundamentals.",
-  },
-  {
-    type: "Professional Certification",
-    title: "Complete Web Development Course",
-    organization: "Programming Hero",
-    period: "June 2024 – March 2025",
-    description:
-      "Comprehensive full-stack engineering with MERN stack, Next.js, TypeScript, API integration, and cloud databases.",
-  },
-  {
-    type: "Professional Certification",
-    title: "Fundamentals of Webpage Design",
-    organization: "NACTAR (National Academy for Computer Training and Research)",
-    period: "June 2024 – September 2024",
-    description:
-      "Specialized training in modern responsive web architecture, semantic design, and accessibility standards.",
-  },
-  {
-    type: "Professional Certification",
-    title: "Web Development Specialization",
-    organization: "Nova Institute of Technology & Management",
-    period: "June 2023 – Dec 2023",
-    description:
-      "Hands-on project engineering with modern JavaScript, DOM architecture, and responsive user interfaces.",
-  },
-];
+interface ExperienceSectionProps {
+  initialExperiences?: SerializedExperience[];
+}
 
-export const ExperienceSection = () => {
-  const [experiences, setExperiences] = useState<WorkExperienceItem[]>(EXPERIENCES);
-  const [educationCerts, setEducationCerts] = useState<EducationItem[]>(EDUCATION_AND_CERTS);
+export const ExperienceSection = ({ initialExperiences }: ExperienceSectionProps) => {
+  const initialExpList = (initialExperiences || []).filter(
+    (item) => item.category === "experience"
+  ) as WorkExperienceItem[];
+
+  const initialEduList = (initialExperiences || []).filter(
+    (item) => item.category === "education"
+  ) as EducationItem[];
+
+  const [experiences, setExperiences] = useState<WorkExperienceItem[]>(initialExpList);
+  const [educationCerts, setEducationCerts] = useState<EducationItem[]>(initialEduList);
 
   useEffect(() => {
     fetch("/api/v1/experiences")
@@ -106,9 +68,7 @@ export const ExperienceSection = () => {
           if (eduList.length > 0) setEducationCerts(eduList);
         }
       })
-      .catch(() => {
-        // Retain static fallback
-      });
+      .catch(() => {});
   }, []);
 
   return (

@@ -28,7 +28,7 @@ const MessageSchema: Schema<IMessage> = new Schema(
     },
     projectType: {
       type: String,
-      default: "Full-Stack Web App",
+      default: "Frontend Web App",
     },
     message: {
       type: String,
