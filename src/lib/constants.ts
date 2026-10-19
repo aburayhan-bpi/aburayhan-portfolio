@@ -1,4 +1,21 @@
-export const SIDEBAR_ITEMS = [
+export interface SidebarSubItem {
+  id: string;
+  label: string;
+  href: string;
+  icon?: string;
+  tabKey?: string;
+}
+
+export interface SidebarItem {
+  id: string;
+  label: string;
+  href: string;
+  icon: string;
+  roles: string[];
+  children?: SidebarSubItem[];
+}
+
+export const SIDEBAR_ITEMS: SidebarItem[] = [
   // ===== ADMIN PORTFOLIO CMS =====
   {
     id: "admin-dashboard",
@@ -48,6 +65,36 @@ export const SIDEBAR_ITEMS = [
     href: "/dashboard/admin/security",
     icon: "Shield",
     roles: ["ADMIN", "SUPER_ADMIN"],
+    children: [
+      {
+        id: "sec-firewall",
+        label: "Firewall & WAF",
+        href: "/dashboard/admin/security?tab=firewall",
+        icon: "ShieldAlert",
+        tabKey: "firewall",
+      },
+      {
+        id: "sec-blacklist",
+        label: "IP Blacklist",
+        href: "/dashboard/admin/security?tab=blacklist",
+        icon: "Shield",
+        tabKey: "blacklist",
+      },
+      {
+        id: "sec-whitelist",
+        label: "IP Whitelist",
+        href: "/dashboard/admin/security?tab=whitelist",
+        icon: "ShieldCheck",
+        tabKey: "whitelist",
+      },
+      {
+        id: "sec-logs",
+        label: "Incident Logs",
+        href: "/dashboard/admin/security?tab=logs",
+        icon: "Activity",
+        tabKey: "logs",
+      },
+    ],
   },
   {
     id: "admin-settings",

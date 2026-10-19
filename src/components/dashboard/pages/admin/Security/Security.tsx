@@ -3,6 +3,7 @@
 import { AppConfirmDialog } from "@/components/shared/AppConfirmDialog";
 import { Icons } from "@/utils/icons";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -40,8 +41,30 @@ interface SecurityConfigData {
 }
 
 export function Security() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const tabParam = searchParams.get("tab") as
+    | "firewall"
+    | "blacklist"
+    | "whitelist"
+    | "logs"
+    | null;
+
+  const activeTab: "firewall" | "blacklist" | "whitelist" | "logs" =
+    tabParam && ["firewall", "blacklist", "whitelist", "logs"].includes(tabParam)
+      ? tabParam
+      : "firewall";
+
   const [data, setData] = useState<SecurityConfigData | null>(null);
-  const [activeTab, setActiveTab] = useState<"firewall" | "blacklist" | "whitelist" | "logs">("firewall");
+
+  const handleTabChange = (tab: "firewall" | "blacklist" | "whitelist" | "logs") => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, startRefresh] = useTransition();
 
@@ -522,7 +545,7 @@ export function Security() {
       {/* Tabs Navigation */}
       <div className="flex items-center gap-2 border-b border-border pb-3 overflow-x-auto text-xs font-mono">
         <button
-          onClick={() => setActiveTab("firewall")}
+          onClick={() => handleTabChange("firewall")}
           className={`px-4 py-2 rounded-xl transition-all cursor-pointer font-medium flex items-center gap-2 ${
             activeTab === "firewall"
               ? "bg-primary text-primary-foreground shadow-sm"
@@ -533,7 +556,7 @@ export function Security() {
           <span>Firewall Limits</span>
         </button>
         <button
-          onClick={() => setActiveTab("blacklist")}
+          onClick={() => handleTabChange("blacklist")}
           className={`px-4 py-2 rounded-xl transition-all cursor-pointer font-medium flex items-center gap-2 ${
             activeTab === "blacklist"
               ? "bg-primary text-primary-foreground shadow-sm"
@@ -544,7 +567,7 @@ export function Security() {
           <span>IP Blacklist ({data?.blacklistedIps.length || 0})</span>
         </button>
         <button
-          onClick={() => setActiveTab("whitelist")}
+          onClick={() => handleTabChange("whitelist")}
           className={`px-4 py-2 rounded-xl transition-all cursor-pointer font-medium flex items-center gap-2 ${
             activeTab === "whitelist"
               ? "bg-primary text-primary-foreground shadow-sm"
@@ -555,7 +578,7 @@ export function Security() {
           <span>IP Whitelist ({data?.whitelistedIps.length || 0})</span>
         </button>
         <button
-          onClick={() => setActiveTab("logs")}
+          onClick={() => handleTabChange("logs")}
           className={`px-4 py-2 rounded-xl transition-all cursor-pointer font-medium flex items-center gap-2 ${
             activeTab === "logs"
               ? "bg-primary text-primary-foreground shadow-sm"
@@ -953,7 +976,7 @@ export function Security() {
                           onClick={async () => {
                             setNewBlacklistIp(log.ip);
                             setNewBlacklistReason(log.reason);
-                            setActiveTab("blacklist");
+                            handleTabChange("blacklist");
                           }}
                           className="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 text-[11px] cursor-pointer transition-colors"
                         >
