@@ -161,8 +161,9 @@ export const Settings = () => {
       });
 
       const resData = await res.json();
-      if (res.ok && resData.secure_url) {
-        setFormData((prev) => ({ ...prev, resumeUrl: resData.secure_url }));
+      const uploadedUrl = resData.url || resData.secure_url;
+      if (res.ok && uploadedUrl) {
+        setFormData((prev) => ({ ...prev, resumeUrl: uploadedUrl }));
         toast.success("Resume uploaded successfully to Cloudinary");
       } else {
         toast.error(resData.error || "Failed to upload resume document");

@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: "portfolio/projects",
-          resource_type: "image",
+          resource_type: "auto",
         },
         (error, result) => {
           if (error) reject(error);
@@ -40,13 +40,14 @@ export async function POST(request: NextRequest) {
       secure_url: string;
       public_id: string;
       format: string;
-      width: number;
-      height: number;
+      width?: number;
+      height?: number;
     };
 
     return NextResponse.json({
       success: true,
       url: result.secure_url,
+      secure_url: result.secure_url,
       publicId: result.public_id,
     });
   } catch (error: unknown) {

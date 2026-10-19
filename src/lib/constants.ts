@@ -15,95 +15,118 @@ export interface SidebarItem {
   children?: SidebarSubItem[];
 }
 
-export const SIDEBAR_ITEMS: SidebarItem[] = [
-  // ===== ADMIN PORTFOLIO CMS =====
+export interface SidebarSection {
+  title: string;
+  items: SidebarItem[];
+}
+
+export const SIDEBAR_SECTIONS: SidebarSection[] = [
   {
-    id: "admin-dashboard",
-    label: "Overview",
-    href: "/dashboard/admin",
-    icon: "LayoutDashboard",
-    roles: ["ADMIN", "SUPER_ADMIN"],
-  },
-  {
-    id: "admin-projects",
-    label: "Projects (CRUD)",
-    href: "/dashboard/admin/projects",
-    icon: "MonitorPlay",
-    roles: ["ADMIN", "SUPER_ADMIN"],
-  },
-  {
-    id: "admin-skills",
-    label: "Skills & Stack",
-    href: "/dashboard/admin/skills",
-    icon: "Users",
-    roles: ["ADMIN", "SUPER_ADMIN"],
-  },
-  {
-    id: "admin-experience",
-    label: "Experience & Education",
-    href: "/dashboard/admin/experience",
-    icon: "Briefcase",
-    roles: ["ADMIN", "SUPER_ADMIN"],
-  },
-  {
-    id: "admin-messages",
-    label: "Messages & Leads",
-    href: "/dashboard/admin/messages",
-    icon: "CalendarCheck",
-    roles: ["ADMIN", "SUPER_ADMIN"],
-  },
-  {
-    id: "admin-analytics",
-    label: "Visitor Analytics",
-    href: "/dashboard/admin/analytics",
-    icon: "BarChart3",
-    roles: ["ADMIN", "SUPER_ADMIN"],
-  },
-  {
-    id: "admin-security",
-    label: "Security & DDoS",
-    href: "/dashboard/admin/security",
-    icon: "Shield",
-    roles: ["ADMIN", "SUPER_ADMIN"],
-    children: [
+    title: "Portfolio CMS",
+    items: [
       {
-        id: "sec-firewall",
-        label: "Firewall & WAF",
-        href: "/dashboard/admin/security?tab=firewall",
-        icon: "ShieldAlert",
-        tabKey: "firewall",
+        id: "admin-dashboard",
+        label: "Overview",
+        href: "/dashboard/admin",
+        icon: "LayoutDashboard",
+        roles: ["ADMIN", "SUPER_ADMIN"],
       },
       {
-        id: "sec-blacklist",
-        label: "IP Blacklist",
-        href: "/dashboard/admin/security?tab=blacklist",
-        icon: "Shield",
-        tabKey: "blacklist",
+        id: "admin-projects",
+        label: "Projects",
+        href: "/dashboard/admin/projects",
+        icon: "MonitorPlay",
+        roles: ["ADMIN", "SUPER_ADMIN"],
       },
       {
-        id: "sec-whitelist",
-        label: "IP Whitelist",
-        href: "/dashboard/admin/security?tab=whitelist",
-        icon: "ShieldCheck",
-        tabKey: "whitelist",
+        id: "admin-skills",
+        label: "Skills & Stack",
+        href: "/dashboard/admin/skills",
+        icon: "Users",
+        roles: ["ADMIN", "SUPER_ADMIN"],
       },
       {
-        id: "sec-logs",
-        label: "Incident Logs",
-        href: "/dashboard/admin/security?tab=logs",
-        icon: "Activity",
-        tabKey: "logs",
+        id: "admin-experience",
+        label: "Experience & Education",
+        href: "/dashboard/admin/experience",
+        icon: "Briefcase",
+        roles: ["ADMIN", "SUPER_ADMIN"],
       },
     ],
   },
   {
-    id: "admin-settings",
-    label: "Site Settings",
-    href: "/dashboard/admin/settings",
-    icon: "Settings",
-    roles: ["ADMIN", "SUPER_ADMIN"],
+    title: "Audience & Growth",
+    items: [
+      {
+        id: "admin-messages",
+        label: "Messages & Leads",
+        href: "/dashboard/admin/messages",
+        icon: "CalendarCheck",
+        roles: ["ADMIN", "SUPER_ADMIN"],
+      },
+      {
+        id: "admin-analytics",
+        label: "Visitor Analytics",
+        href: "/dashboard/admin/analytics",
+        icon: "BarChart3",
+        roles: ["ADMIN", "SUPER_ADMIN"],
+      },
+    ],
+  },
+  {
+    title: "System & Infrastructure",
+    items: [
+      {
+        id: "admin-security",
+        label: "Security & DDoS",
+        href: "/dashboard/admin/security",
+        icon: "Shield",
+        roles: ["ADMIN", "SUPER_ADMIN"],
+        children: [
+          {
+            id: "sec-firewall",
+            label: "Firewall & WAF",
+            href: "/dashboard/admin/security?tab=firewall",
+            icon: "ShieldAlert",
+            tabKey: "firewall",
+          },
+          {
+            id: "sec-blacklist",
+            label: "IP Blacklist",
+            href: "/dashboard/admin/security?tab=blacklist",
+            icon: "Shield",
+            tabKey: "blacklist",
+          },
+          {
+            id: "sec-whitelist",
+            label: "IP Whitelist",
+            href: "/dashboard/admin/security?tab=whitelist",
+            icon: "ShieldCheck",
+            tabKey: "whitelist",
+          },
+          {
+            id: "sec-logs",
+            label: "Incident Logs",
+            href: "/dashboard/admin/security?tab=logs",
+            icon: "Activity",
+            tabKey: "logs",
+          },
+        ],
+      },
+      {
+        id: "admin-settings",
+        label: "Site Settings",
+        href: "/dashboard/admin/settings",
+        icon: "Settings",
+        roles: ["ADMIN", "SUPER_ADMIN"],
+      },
+    ],
   },
 ];
+
+export const SIDEBAR_ITEMS: SidebarItem[] = SIDEBAR_SECTIONS.flatMap(
+  (section) => section.items,
+);
 
 // website details for Abu Rayhan's Portfolio
 export const WEBSITE_DETAILS = {
